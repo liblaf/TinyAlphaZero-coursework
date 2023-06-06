@@ -14,6 +14,8 @@ title: "作业 2: 强化学习基础"
 
 #### Coverage
 
+Detailed coverage report can be found at [Codecov](https://app.codecov.io/gh/liblaf/TinyAlphaZero/tree/main/hw2%2Fcode%2Falphazero).
+
 ```
 ---------- coverage: platform linux, python 3.9.16-final-0 -----------
 Name                                   Stmts   Miss  Cover   Missing
