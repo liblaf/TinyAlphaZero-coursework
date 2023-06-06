@@ -20,11 +20,6 @@ pytest = "^7.3.1"
 pytest-cov = "^4.1.0"
 
 [[tool.poetry.source]]
-default = true
-name = "PyPI"
-url = "https://pypi.org/simple"
-
-[[tool.poetry.source]]
-default = false
 name = "pytorch"
+priority = "explicit"
 url = "https://download.pytorch.org/whl/cpu"
