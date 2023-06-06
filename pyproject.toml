@@ -1,0 +1,30 @@
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
+
+[tool.poetry]
+authors = ["liblaf <i@liblaf.me>"]
+description = ""
+license = "MIT"
+name = "tiny-alpha-zero"
+readme = "README.md"
+version = "0.0.0"
+
+[tool.poetry.dependencies]
+matplotlib = "^3.7.1"
+python = "^3.9"
+torch = { source = "pytorch", version = "^2.0.1+cpu" }
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+pytest-cov = "^4.1.0"
+
+[[tool.poetry.source]]
+default = true
+name = "PyPI"
+url = "https://pypi.org/simple"
+
+[[tool.poetry.source]]
+default = false
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"

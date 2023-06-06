@@ -1,3 +1,5 @@
+import argparse
+
 import gym
 import numpy as np
 import torch
@@ -5,6 +7,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from matplotlib import pyplot as plt
 from torch.distributions import Categorical
+
+parser: argparse.ArgumentParser = argparse.ArgumentParser()
+parser.add_argument("-o", "--output", type=str, default=None, dest="output")
+parser.add_argument("-r", "--render", action="store_true", default=False, dest="render")
+parser.add_argument("-s", "--seed", type=int, default=0, dest="seed")
+
 
 # see https://github.com/openai/gym/blob/master/gym/envs/classic_control/cartpole.py
 # understand environment, state, action and other definitions first before your dive in.
@@ -79,7 +87,12 @@ class REINFORCE:
         # -------------------------------
         # Your code goes here
         # TODO Calculate the loss of each step of the episode and store them in '''loss'''
-
+        num_steps: int = len(self.rewards)
+        G: float = 0
+        for i in range(num_steps - 1, -1, -1):
+            G = self.rewards[i] + GAMMA * G
+            loss.append(-torch.log(self.action_probs[i][0][self.actions[i]]) * G)
+        loss.reverse()
         # -------------------------------
 
         # code for autograd and back propagation
@@ -93,11 +106,20 @@ class REINFORCE:
 
 
 def main():
+    args: argparse.Namespace = parser.parse_args()
+    torch.manual_seed(seed=args.seed)
+    episode_list: list[int] = []
+    loss_list: list[float] = []
+    reward_list: list[float] = []
+
     # initialize OpenAI Gym env and PG agent
     env = gym.make(ENV_NAME)
+    env.seed(args.seed)
     agent = REINFORCE(env)
 
     for episode in range(EPISODE):
+        loss: float = np.nan
+
         # initialize task
         state = env.reset()
         # Train
@@ -117,7 +139,8 @@ def main():
                 state = env.reset()
                 for j in range(STEP):
                     # You may uncomment the line below to enable rendering for visualization.
-                    # env.render()
+                    if args.render:
+                        env.render()
                     action, _ = agent.predict(state, deterministic=True)
                     state, reward, done, _ = env.step(action.item())
                     total_reward += reward
@@ -127,6 +150,13 @@ def main():
 
             # Your avg_reward should reach 200 after a number of episodes.
             print("episode: ", episode, "Evaluation Average Reward:", avg_reward)
+
+            episode_list.append(episode)
+            loss_list.append(loss)
+            reward_list.append(avg_reward)
+
+    if args.output:
+        np.savetxt(args.output, np.array([episode_list, loss_list, reward_list]))
 
 
 if __name__ == "__main__":
