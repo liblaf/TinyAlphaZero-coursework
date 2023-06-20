@@ -7,13 +7,13 @@ from anylearn.applications.quickstart import quick_train
 from anylearn.config import init_sdk
 
 if __name__ == "__main__":
-    args = parser.parse_args()
-    init_sdk("https://anylearn.nelbds.cn", "username", "password")
+    # args = parser.parse_args()
+    init_sdk("https://anylearn.nelbds.cn", "liqin", "ivQCqX3^v&W5Cw2p")
     train_task, _, _, _ = quick_train(
         algorithm_dir="./",
         algorithm_name="AlphaZero",
-        entrypoint="python main.py",  # 训练启动命令，可以是python、shell等等
-        quota_group_name="xxxxx",
+        entrypoint="python -m alpha_zero.main",  # 训练启动命令，可以是python、shell等等
+        quota_group_name="SE2023",
         quota_group_request={"CPU": 8, "Memory": 32, "RTX-3090-shared": 1},
         hyperparams={},
         output="./temp",

@@ -1,13 +1,16 @@
-from GoGame import GoGame
-from Player import *
 from tqdm import trange
 
-N_TEST = 80
-BOARD_SIZE = 9
-N_PLAY_OUT = 50
+from .GoGame import GoGame
+from .Player import AlphaZeroPlayer, Player, RandomPlayer
+
+N_TEST: int = 80
+BOARD_SIZE: int = 9
+N_PLAY_OUT: int = 50
 
 
-def single_match(player1, player2, game, display=False):
+def single_match(
+    player1: Player, player2: Player, game: GoGame, display: bool = False
+) -> list[int]:
     player1.player, player2.player = 1, -1
     state = game.reset()
     if display:
@@ -42,7 +45,13 @@ def single_match(player1, player2, game, display=False):
     return score
 
 
-def test_multi_match(player1, player2, game, n_test=100, print_result=True):
+def test_multi_match(
+    player1: Player,
+    player2: Player,
+    game: GoGame,
+    n_test: int = 100,
+    print_result: bool = True,
+) -> tuple[int, int, int]:
     player1_win, player2_win, draw = 0, 0, 0
 
     for _ in trange(n_test // 2):
@@ -82,15 +91,16 @@ if __name__ == "__main__":
 
     player1 = alphazero_player
     player2 = random_player
+    game = global_game
 
     # test win-lose rate
-    test_multi_match(player1, player2, global_game, N_TEST)
+    # test_multi_match(player1, player2, global_game, N_TEST)
 
     # visualize games
     # player1 play first
-    # single_match(player1, player2, game, display=True)
+    single_match(player1, player2, game, display=True)
     # player2 play first
-    # single_match(player2, player1, game, display=True)
+    single_match(player2, player1, game, display=True)
 
     # play with human
     # player1 = alphabeta_player

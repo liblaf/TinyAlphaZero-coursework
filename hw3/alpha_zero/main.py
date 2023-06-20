@@ -1,19 +1,21 @@
 import logging
+from pathlib import Path
 
 import coloredlogs
-from GoGame import GoGame as Game
-from GoNNet import GoNNetWrapper as nn
-from Player import *
-from train_alphazero import Trainer
-from util import *
+
+from .GoGame import GoGame as Game
+from .GoNNet import GoNNetWrapper as nn
+from .Player import RandomPlayer
+from .train_alphazero import Trainer
+from .utils import DotDict, set_seed_everywhere
 
 log = logging.getLogger(__name__)
 
 coloredlogs.install(level="INFO")
 
-BOARD_SIZE = 9
+BOARD_SIZE: int = 9
 
-args = dotdict(
+args: DotDict = DotDict(
     {
         "max_training_iter": 5000,  # 训练主循环最大迭代次数
         "selfplay_each_iter": 100,  # 每次训练迭代自我对弈次数
@@ -33,6 +35,9 @@ args = dotdict(
 
 
 def main():
+    load_model: bool = args["load_model"]
+    load_folder_file: tuple[str | Path, str] = args["load_folder_file"]
+
     set_seed_everywhere(1)
     log.info("Loading %s...", Game.__name__)
     g = Game(BOARD_SIZE)
@@ -40,13 +45,11 @@ def main():
     log.info("Loading %s...", nn.__name__)
     nnet = nn(g)
 
-    if args.load_model:
+    if load_model:
         log.info(
-            'Loading checkpoint "%s/%s"...',
-            args.load_folder_file[0],
-            args.load_folder_file[1],
+            'Loading checkpoint "%s/%s"...', load_folder_file[0], load_folder_file[1]
         )
-        nnet.load_checkpoint(args.load_folder_file[0], args.load_folder_file[1])
+        nnet.load_checkpoint(load_folder_file[0], load_folder_file[1])
     else:
         log.warning("Not loading a checkpoint!")
 
