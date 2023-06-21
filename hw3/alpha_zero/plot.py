@@ -10,10 +10,11 @@ def plot_win_rate(
     pit_results: List[Tuple[float, int, int, int]],
     output: Union[str, Path] = Path("output") / "win-rate.png",
 ) -> None:
-    time_list: List[timedelta] = []
+    time_list: List[float] = []
     win_rate_list: List[float] = []
     for time, win, lose, draw in pit_results:
-        time_list.append(datetime.fromtimestamp(time) - start_time)
+        delta: timedelta = datetime.fromtimestamp(time) - start_time
+        time_list.append(delta.total_seconds())
         win_rate_list.append(win / (win + lose + draw))
     plt.figure(dpi=300)
     plt.plot(time_list, win_rate_list)
@@ -37,10 +38,11 @@ def plot_loss(
     loss_history: List[Tuple[float, float]],
     output: Union[str, Path] = Path("output") / "loss.png",
 ) -> None:
-    time_list: List[timedelta] = []
+    time_list: List[float] = []
     loss_list: List[float] = []
     for time, loss in loss_history:
-        time_list.append(datetime.fromtimestamp(time) - start_time)
+        delta: timedelta = datetime.fromtimestamp(time) - start_time
+        time_list.append(delta.total_seconds())
         loss_list.append(loss)
     plt.figure(dpi=300)
     plt.plot(time_list, loss_list)

@@ -38,7 +38,7 @@ profile: $(CURDIR)/train.profile
 	speedscope $<
 
 test:
-	pytest --capture no --cov $(CODE) --cov-report term --cov-report term-missing $(CURDIR)
+	pytest --capture no --cov $(CODE) --cov-report term --cov-report term-missing $(CURDIR) -k plot
 
 train:
 ifeq ($(MULTIPROCESSING), True)
