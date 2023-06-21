@@ -1,15 +1,20 @@
+from abc import ABC
 from pathlib import Path
+from typing import Union
 
 import numpy as np
 
+from . import GoNNetWrapper
 from .GoBoard import Board
 from .GoGame import GoGame
-from .GoNNet import GoNNetWrapper
 from .MCTS import MCTS
 
 
-class Player:
+class Player(ABC):
     player: int = 0
+
+    def __str__(self) -> str:
+        ...
 
     def play(self, board: Board) -> int:
         ...
@@ -36,11 +41,11 @@ class AlphaZeroPlayer(Player):
     game: GoGame
     player: int = 0
     nnet: GoNNetWrapper
-    checkpoint_path: str | Path
+    checkpoint_path: Union[str, Path]
     mcts: MCTS
 
     def __init__(
-        self, game: GoGame, checkpoint_path: str | Path, num_sims: int, C: float
+        self, game: GoGame, checkpoint_path: Union[str, Path], num_sims: int, C: float
     ) -> None:
         self.nnet = GoNNetWrapper(game)
         self.checkpoint_path = checkpoint_path

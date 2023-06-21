@@ -5,7 +5,7 @@ on:
   pull_request:
 
 env:
-  PYTHON_VERSION: 3.11
+  PYTHON_VERSION: 3.7
 
 jobs:
   coverage:

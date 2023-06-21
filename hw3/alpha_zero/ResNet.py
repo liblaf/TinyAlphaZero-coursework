@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from tqdm import tqdm
 
+from .GoBoard import Stone
 from .GoGame import GoGame
 
 net_config: Dict[str, Any] = {
@@ -18,8 +19,40 @@ net_config: Dict[str, Any] = {
     "dropout": 0.3,
     "epochs": 10,
     "lr": 0.001,
-    "num_channels": 256,
+    "num_channels": 64,
 }
+
+
+def get_encoded_state(board: np.ndarray) -> np.ndarray:
+    return np.stack(
+        arrays=(board == Stone.BLACK, board == Stone.WHITE, board == Stone.EMPTY)
+    )
+
+
+class ResBlock(nn.Module):
+    conv_1: nn.Conv2d
+    batch_norm_1: nn.BatchNorm2d
+    conv_2: nn.Conv2d
+    batch_norm_2: nn.BatchNorm2d
+
+    def __init__(self, num_hidden: int) -> None:
+        super().__init__()
+        self.conv_1 = nn.Conv2d(
+            in_channels=num_hidden, out_channels=num_hidden, kernel_size=3, padding=1
+        )
+        self.batch_norm_1 = nn.BatchNorm2d(num_features=num_hidden)
+        self.conv_2 = nn.Conv2d(
+            in_channels=num_hidden, out_channels=num_hidden, kernel_size=3, padding=1
+        )
+        self.batch_norm_2 = nn.BatchNorm2d(num_features=num_hidden)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        residual = x
+        x = F.relu(self.batch_norm_1(self.conv_1(x)))
+        x = self.batch_norm_2(self.conv_2(x))
+        x += residual
+        x = F.relu(x)
+        return x
 
 
 class GoNNet(nn.Module):
@@ -28,20 +61,10 @@ class GoNNet(nn.Module):
     board_x: int
     board_y: int
 
-    conv_1: nn.Conv2d
-    conv_2: nn.Conv2d
-    conv_3: nn.Conv2d
-    conv_4: nn.Conv2d
-    batch_norm_1: nn.BatchNorm2d
-    batch_norm_2: nn.BatchNorm2d
-    batch_norm_3: nn.BatchNorm2d
-    batch_norm_4: nn.BatchNorm2d
-    linear_1: nn.Linear
-    linear_batch_norm_1: nn.BatchNorm1d
-    linear_2: nn.Linear
-    linear_batch_norm_2: nn.BatchNorm1d
-    linear_3: nn.Linear
-    linear_4: nn.Linear
+    start_block: nn.Sequential
+    back_bone: nn.ModuleList
+    policy_head: nn.Sequential
+    value_head: nn.Sequential
 
     def __init__(self, game: GoGame, args: Dict[str, Any]) -> None:
         ######################################
@@ -51,72 +74,47 @@ class GoNNet(nn.Module):
         self.action_size = game.action_size()
         self.args = args
         self.board_x, self.board_y = game.obs_size()
-        num_channels: int = args["num_channels"]
+        num_res_blocks: int = 4
+        num_hidden: int = 64
 
-        self.conv_1 = nn.Conv2d(
-            in_channels=1, out_channels=num_channels, kernel_size=3, stride=1, padding=1
-        )
-        self.conv_2 = nn.Conv2d(
-            in_channels=num_channels,
-            out_channels=num_channels,
-            kernel_size=3,
-            stride=1,
-            padding=1,
-        )
-        self.conv_3 = nn.Conv2d(
-            in_channels=num_channels, out_channels=num_channels, kernel_size=3, stride=1
-        )
-        self.conv_4 = nn.Conv2d(
-            in_channels=num_channels, out_channels=num_channels, kernel_size=3, stride=1
+        self.start_block = nn.Sequential(
+            nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
+            nn.BatchNorm2d(num_hidden),
+            nn.ReLU(),
         )
 
-        self.batch_norm_1 = nn.BatchNorm2d(num_features=num_channels)
-        self.batch_norm_2 = nn.BatchNorm2d(num_features=num_channels)
-        self.batch_norm_3 = nn.BatchNorm2d(num_features=num_channels)
-        self.batch_norm_4 = nn.BatchNorm2d(num_features=num_channels)
-
-        self.linear_1 = nn.Linear(
-            in_features=num_channels * (self.board_x - 4) * (self.board_y - 4),
-            out_features=512,
+        self.back_bone = nn.ModuleList(
+            [ResBlock(num_hidden) for i in range(num_res_blocks)]
         )
-        self.linear_batch_norm_1 = nn.BatchNorm1d(num_features=512)
 
-        self.linear_2 = nn.Linear(in_features=512, out_features=256)
-        self.linear_batch_norm_2 = nn.BatchNorm1d(num_features=256)
+        self.policy_head = nn.Sequential(
+            nn.Conv2d(num_hidden, 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(32 * self.board_x * self.board_y, game.action_size()),
+        )
 
-        self.linear_3 = nn.Linear(in_features=256, out_features=self.action_size)
+        self.value_head = nn.Sequential(
+            nn.Conv2d(num_hidden, 3, kernel_size=3, padding=1),
+            nn.BatchNorm2d(3),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(3 * self.board_x * self.board_y, 1),
+            nn.Tanh(),
+        )
 
-        self.linear_4 = nn.Linear(in_features=256, out_features=1)
-
-    def forward(self, s: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         ######################################
         #        YOUR CODE GOES HERE         #
         ######################################
-        dropout: float = self.args["dropout"]
-        num_channels: int = self.args["num_channels"]
-
-        s = s.view(-1, 1, self.board_x, self.board_y)
-        s = F.relu(self.batch_norm_1(self.conv_1(s)))
-        s = F.relu(self.batch_norm_2(self.conv_2(s)))
-        s = F.relu(self.batch_norm_3(self.conv_3(s)))
-        s = F.relu(self.batch_norm_4(self.conv_4(s)))
-        s = s.view(-1, num_channels * (self.board_x - 4) * (self.board_y - 4))
-
-        s = F.dropout(
-            F.relu(self.linear_batch_norm_1(self.linear_1(s))),
-            p=dropout,
-            training=self.training,
-        )
-        s = F.dropout(
-            F.relu(self.linear_batch_norm_2(self.linear_2(s))),
-            p=dropout,
-            training=self.training,
-        )
-
-        policy = self.linear_3(s)
-        value = self.linear_4(s)
-
-        return F.log_softmax(policy, dim=1), torch.tanh(value)
+        x = x.view(-1, 3, self.board_x, self.board_y)
+        x = self.start_block(x)
+        for res_block in self.back_bone:
+            x = res_block(x)
+        policy = self.policy_head(x)
+        value = self.value_head(x)
+        return policy, value
 
 
 class GoNNetWrapper:
@@ -156,11 +154,15 @@ class GoNNetWrapper:
 
             batch_count: int = len(training_data) // batch_size
 
-            t: tqdm = tqdm(range(batch_count), desc="Training NNet")
+            t: tqdm = tqdm(range(batch_count), desc="Training ResNet")
             for _ in t:
                 sample_ids = np.random.randint(len(training_data), size=batch_size)
                 boards, pis, vs = list(zip(*[training_data[i] for i in sample_ids]))
-                boards = torch.FloatTensor(np.array(boards).astype(np.float64))
+                boards = torch.FloatTensor(
+                    np.array([get_encoded_state(state) for state in boards]).astype(
+                        np.float64
+                    )
+                )
                 target_pis = torch.FloatTensor(np.array(pis))
                 target_vs = torch.FloatTensor(np.array(vs).astype(np.float64))
 
@@ -178,9 +180,9 @@ class GoNNetWrapper:
                 policy: torch.Tensor
                 value: torch.Tensor
                 policy, value = self.nnet(boards)
-                loss = F.mse_loss(input=value, target=target_vs, reduction="none").view(
-                    batch_size
-                ) - torch.sum(policy * target_pis, dim=-1)
+                loss = F.mse_loss(
+                    input=value, target=target_vs, reduction="sum"
+                ) + F.cross_entropy(input=policy, target=target_pis, reduction="sum")
                 optimizer.zero_grad()
                 loss = loss.sum()
                 loss_list.append((datetime.now().timestamp(), loss.item()))
@@ -197,17 +199,20 @@ class GoNNetWrapper:
         """
         cuda: bool = self.nnet.args["cuda"]
 
-        board_tensor: torch.Tensor = torch.FloatTensor(board.astype(np.float64))
+        board_tensor: torch.Tensor = torch.FloatTensor(get_encoded_state(board))
         if cuda:
             board_tensor = board_tensor.contiguous().cuda()
-        board_tensor = board_tensor.view(1, self.board_x, self.board_y)
+        board_tensor = board_tensor.view(3, self.board_x, self.board_y)
         self.nnet.eval()
         with torch.no_grad():
             pi: torch.Tensor
             v: torch.Tensor
             pi, v = self.nnet(board_tensor)
 
-        return torch.exp(pi).data.cpu().numpy()[0], v.data.cpu().numpy()[0]
+        return (
+            torch.softmax(pi, dim=1).squeeze(dim=0).data.cpu().numpy(),
+            v.squeeze(dim=0).data.cpu().numpy(),
+        )
 
     def save_checkpoint(
         self,

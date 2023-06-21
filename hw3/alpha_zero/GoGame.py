@@ -1,9 +1,13 @@
+from typing import List, Tuple
+
 import numpy as np
 
 from .GoBoard import Board
 
 
 class GoGame:
+    n: int
+
     def __init__(self, n: int = 3):
         assert n % 2 == 1
         self.n = n
@@ -14,7 +18,7 @@ class GoGame:
         """
         return Board(n=self.n)
 
-    def obs_size(self) -> tuple[int, int]:
+    def obs_size(self) -> Tuple[int, int]:
         """
         Size of the board.
         """
@@ -74,7 +78,7 @@ class GoGame:
 
     def get_transform_data(
         self, board: Board, policy: np.ndarray
-    ) -> list[tuple[Board, np.ndarray]]:
+    ) -> List[Tuple[Board, np.ndarray]]:
         """
         Rotate and flip the board and corresponding policy vector.
         This method adds more examples to the training dataset,

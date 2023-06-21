@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 
 from .GoBoard import Board
@@ -14,7 +16,7 @@ class GoGame:
         """
         return Board(self.n)
 
-    def obs_size(self) -> tuple[int, int]:
+    def obs_size(self) -> Tuple[int, int]:
         """
         Size of the board.
         """

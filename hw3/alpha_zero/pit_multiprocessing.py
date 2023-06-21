@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from tqdm import trange
+import torch.multiprocessing as mp
 
 from .GoGame import GoGame
 from .Player import AlphaZeroPlayer, Player, RandomPlayer
@@ -56,17 +56,32 @@ def multi_match(
 ) -> Tuple[int, int, int]:
     player1_win, player2_win, draw = 0, 0, 0
 
-    for _ in trange(n_test // 2):
-        score = single_match(player1, player2, game)
-        player1_win += score[0]
-        player2_win += score[2]
-        draw += score[1]
+    # for _ in trange(n_test // 2):
+    #     score = single_match(player1, player2, game)
+    #     player1_win += score[0]
+    #     player2_win += score[2]
+    #     draw += score[1]
 
-    for _ in trange(n_test // 2):  # reverse side
-        score = single_match(player2, player1, game)
-        player1_win += score[2]
-        player2_win += score[0]
-        draw += score[1]
+    # for _ in trange(n_test // 2):  # reverse side
+    #     score = single_match(player2, player1, game)
+    #     player1_win += score[2]
+    #     player2_win += score[0]
+    #     draw += score[1]
+
+    with mp.Pool(processes=8) as pool:
+        for player_1_win_once, draw_once, player_2_win_once in pool.starmap(
+            single_match, [(player1, player2, game)] * (n_test // 2)
+        ):
+            player1_win += player_1_win_once
+            player2_win += player_2_win_once
+            draw += draw_once
+
+        for player_2_win_once, draw_once, player_1_win_once in pool.starmap(
+            single_match, [(player2, player1, game)] * (n_test // 2)
+        ):  # reverse side
+            player1_win += player_1_win_once
+            player2_win += player_2_win_once
+            draw += draw_once
 
     tot_match = (n_test // 2) * 2
     if print_result:

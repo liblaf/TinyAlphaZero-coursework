@@ -1,12 +1,13 @@
 import os
 import pickle
 from pathlib import Path
+from typing import Dict, Tuple, Union
 
 import numpy as np
 
+from . import GoNNetWrapper
 from .GoBoard import Board
 from .GoGame import GoGame
-from .GoNNet import GoNNetWrapper
 
 
 class MCTS:
@@ -15,11 +16,11 @@ class MCTS:
     num_sims: int
     C: float
     training: bool = True
-    visit_count_state: dict[str, int] = {}
-    visit_count_state_action: dict[tuple[str, int], int] = {}
-    # total_action_value: dict[tuple[str, int], float] = {}
-    mean_action_value: dict[tuple[str, int], float] = {}
-    prior_probability: dict[str, np.ndarray] = {}
+    visit_count_state: Dict[str, int] = {}
+    visit_count_state_action: Dict[Tuple[str, int], int] = {}
+    # total_action_value: Dict[Tuple[str, int], float] = {}
+    mean_action_value: Dict[Tuple[str, int], float] = {}
+    prior_probability: Dict[str, np.ndarray] = {}
 
     def __init__(
         self, game: GoGame, nnet: GoNNetWrapper, num_sims: int, C: float
@@ -140,11 +141,11 @@ class MCTS:
 
         return -v
 
-    def save_params(self, file_name: str | Path = "mcts_param.pkl") -> None:
+    def save_params(self, file_name: Union[str, Path] = "mcts_param.pkl") -> None:
         with open(file_name, "wb") as f:
             pickle.dump(self.__dict__, f)
 
-    def load_params(self, file_name: str | Path = "mcts_param.pkl") -> bool:
+    def load_params(self, file_name: Union[str, Path] = "mcts_param.pkl") -> bool:
         if not os.path.exists(file_name):
             print(f"Parameter file {file_name} does not exist, load failed!")
             return False

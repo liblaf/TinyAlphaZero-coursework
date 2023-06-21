@@ -1,9 +1,9 @@
-from typing import Any
+from typing import Any, List, Tuple
 
 import numpy as np
 from typing_extensions import Self
 
-ADJACENCIES: list[tuple[int, int]] = [(0, -1), (0, +1), (-1, 0), (+1, 0)]
+ADJACENCIES: List[Tuple[int, int]] = [(0, -1), (0, +1), (-1, 0), (+1, 0)]
 
 
 class Stone:
@@ -13,8 +13,8 @@ class Stone:
 
 
 class Board:
-    last_captured: tuple[int, int] = (-1, -1)
-    last_move_is_pass: tuple[bool, bool] = (False, False)
+    last_captured: Tuple[int, int] = (-1, -1)
+    last_move_is_pass: Tuple[bool, bool] = (False, False)
     num_moves: int = 0
 
     def __init__(self, n: int) -> None:
@@ -62,7 +62,7 @@ class Board:
         assert self._validate_move(x, y, color=color)
         self._unsafe_add_stone(x, y, color=color)
 
-    def valid_moves(self, color: int) -> list[tuple[int, int]]:
+    def valid_moves(self, color: int) -> List[Tuple[int, int]]:
         """
         Return a list of avaliable moves
         @return: a list like [(0,0), (0,1), ...]
@@ -70,14 +70,14 @@ class Board:
         ######################################
         #        YOUR CODE GOES HERE         #
         ######################################
-        valid_moves: list[tuple[int, int]] = []
+        valid_moves: List[Tuple[int, int]] = []
         for x, y in np.ndindex(self.n, self.n):
             if not self._validate_move(x, y, color=color):
                 continue
             valid_moves.append((x, y))
         return valid_moves
 
-    def get_scores(self) -> tuple[int, int]:
+    def get_scores(self) -> Tuple[int, int]:
         """
         Compute score of players
         @return: a tuple (black_score, white_score)
@@ -133,26 +133,26 @@ class Board:
     def _within_board(self, x: int, y: int) -> bool:
         return 0 <= x < self.n and 0 <= y < self.n
 
-    def _get_adjacencies(self, x: int, y: int) -> list[tuple[int, int]]:
-        ret: list[tuple[int, int]] = []
+    def _get_adjacencies(self, x: int, y: int) -> List[Tuple[int, int]]:
+        ret: List[Tuple[int, int]] = []
         for i, j in ADJACENCIES:
             if self._within_board(x + i, y + j):
                 ret.append((x + i, y + j))
         return ret
 
-    def _get_connected(self, x: int, y: int, color: int) -> list[tuple[int, int]]:
+    def _get_connected(self, x: int, y: int, color: int) -> List[Tuple[int, int]]:
         assert self[x, y] == color
         connected: np.ndarray = np.zeros(shape=(self.n, self.n), dtype=bool)
         connected[x, y] = True
-        stack: list[tuple[int, int]] = [(x, y)]
+        stack: List[Tuple[int, int]] = [(x, y)]
         while len(stack) > 0:
             x, y = stack.pop()
-            adjacencies: list[tuple[int, int]] = self._get_adjacencies(x, y)
+            adjacencies: List[Tuple[int, int]] = self._get_adjacencies(x, y)
             for i, j in adjacencies:
                 if (self[i, j] == color) and (not connected[i, j]):
                     connected[i, j] = True
                     stack.append((i, j))
-        ret: list[tuple[int, int]] = []
+        ret: List[Tuple[int, int]] = []
         for x, y in np.ndindex(self.n, self.n):
             if connected[x, y]:
                 ret.append((x, y))
@@ -182,7 +182,7 @@ class Board:
         liberties: np.ndarray = self._get_liberties()
         captured: np.ndarray = (self.data == -color) & (liberties == False)
         if captured.sum() == 1:
-            where: tuple[np.ndarray, np.ndarray] = np.where(captured)
+            where: Tuple[np.ndarray, np.ndarray] = np.where(captured)
             self.last_captured = (where[0][0], where[1][0])
         else:
             self.last_captured = (-1, -1)

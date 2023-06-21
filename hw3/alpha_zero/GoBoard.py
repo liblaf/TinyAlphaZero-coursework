@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import Any, Iterable
+from typing import Any, Iterable, List, Tuple, Union
 
 import numpy as np
 from typing_extensions import Self
@@ -13,8 +13,8 @@ class Stone(IntEnum):
 
 class Board:
     data: np.ndarray
-    last_capture: tuple[int, int] = (-1, -1)
-    last_move_is_pass: tuple[bool, bool] = (False, False)
+    last_capture: Tuple[int, int] = (-1, -1)
+    last_move_is_pass: Tuple[bool, bool] = (False, False)
     n: int
     num_moves: int = 0
 
@@ -29,15 +29,14 @@ class Board:
         ret += f"Num  Moves  : {self.num_moves}" + "\n"
         for i in range(self.n):
             for j in range(self.n):
-                match self.data[i, j]:
-                    case Stone.EMPTY:
-                        ret += "+"
-                    case Stone.BLACK:
-                        ret += "\N{Black Circle}"  # ●
-                    case Stone.WHITE:
-                        ret += "\N{White Circle}"  # ○
-                    case _:
-                        assert False, "Unreachable"  # pragma: no cover
+                if self.data[i, j] == Stone.EMPTY:
+                    ret += "+"
+                elif self.data[i, j] == Stone.BLACK:
+                    ret += "\N{Black Circle}"  # ●
+                elif self.data[i, j] == Stone.WHITE:
+                    ret += "\N{White Circle}"  # ○
+                else:
+                    assert False, "Unreachable"  # pragma: no cover
             ret += "\n"
         return ret
 
@@ -55,7 +54,7 @@ class Board:
         return self.data.copy()
         # Note: Copy if you don't want to mess up the original board.
 
-    def add_stone(self, x: int, y: int, color: Stone | int) -> None:
+    def add_stone(self, x: int, y: int, color: Union[Stone, int]) -> None:
         """
         Add a stone to the board, and remove captured stones
         """
@@ -65,7 +64,7 @@ class Board:
         assert self._validate_move(x, y, color=Stone(color))
         self._unsafe_add_stone(x, y, color=Stone(color))
 
-    def valid_moves(self, color: Stone | int) -> list[tuple[int, int]]:
+    def valid_moves(self, color: Union[Stone, int]) -> List[Tuple[int, int]]:
         """
         Return a list of avaliable moves
         @return: a list like [(0,0), (0,1), ...]
@@ -75,7 +74,7 @@ class Board:
         ######################################
         return list(self._get_valid_moves(color=Stone(color)))
 
-    def get_scores(self) -> tuple[int, int]:
+    def get_scores(self) -> Tuple[int, int]:
         """
         Compute score of players
         @return: a tuple (black_score, white_score)
@@ -87,38 +86,40 @@ class Board:
         white_score: int = 0
         visited: np.ndarray = np.zeros(shape=(self.n, self.n), dtype=bool)
         for x, y in np.ndindex(self.n, self.n):
-            match self.data[x, y]:
-                case Stone.EMPTY:
-                    if visited[x, y]:
-                        continue
-                    color: Stone = Stone.EMPTY
-                    connected: list[tuple[int, int]] = list(self._get_connected(x, y))
-                    for nx, ny in self._get_adjacencies(connected):
-                        if self.data[nx, ny] == Stone.EMPTY:
+            if self.data[x, y] == Stone.EMPTY:
+                if visited[x, y]:
+                    continue
+                color: Stone = Stone.EMPTY
+                connected: List[Tuple[int, int]] = list(self._get_connected(x, y))
+                for nx, ny in self._get_adjacencies(connected):
+                    if self.data[nx, ny] == Stone.EMPTY:
+                        pass
+                    else:
+                        if color == Stone.EMPTY:
+                            color = self.data[nx, ny]
+                        elif color == self.data[nx, ny]:
                             pass
+                        elif color != self.data[nx, ny]:
+                            color = Stone.EMPTY
+                            break
                         else:
-                            if color == Stone.EMPTY:
-                                color = self.data[nx, ny]
-                            elif color == self.data[nx, ny]:
-                                pass
-                            elif color != self.data[nx, ny]:
-                                color = Stone.EMPTY
-                                break
-                            else:
-                                assert False, "Unreachable"  # pragma: no cover
-                    match color:
-                        case Stone.EMPTY:
-                            pass
-                        case Stone.BLACK:
-                            black_score += len(connected)
-                        case Stone.WHITE:
-                            white_score += len(connected)
-                    for x, y in connected:
-                        visited[x, y] = True
-                case Stone.BLACK:
-                    black_score += 1
-                case Stone.WHITE:
-                    white_score += 1
+                            assert False, "Unreachable"  # pragma: no cover
+                if color == Stone.EMPTY:
+                    pass
+                elif color == Stone.BLACK:
+                    black_score += len(connected)
+                elif color == Stone.WHITE:
+                    white_score += len(connected)
+                else:
+                    assert False, "Unreachable"  # pragma: no cover
+                for x, y in connected:
+                    visited[x, y] = True
+            elif self.data[x, y] == Stone.BLACK:
+                black_score += 1
+            elif self.data[x, y] == Stone.WHITE:
+                white_score += 1
+            else:
+                assert False, "Unreachable"  # pragma: no cover
         return black_score, white_score
 
     def copy(self) -> Self:
@@ -132,15 +133,15 @@ class Board:
     def _within_board(self, x: int, y: int) -> bool:
         return 0 <= x < self.n and 0 <= y < self.n
 
-    def _get_adjacency(self, x: int, y: int) -> Iterable[tuple[int, int]]:
+    def _get_adjacency(self, x: int, y: int) -> Iterable[Tuple[int, int]]:
         for dx, dy in [(-1, 0), (0, -1), (0, +1), (+1, 0)]:
             nx, ny = x + dx, y + dy
             if self._within_board(nx, ny):
                 yield nx, ny
 
-    def _get_connected(self, x: int, y: int) -> Iterable[tuple[int, int]]:
+    def _get_connected(self, x: int, y: int) -> Iterable[Tuple[int, int]]:
         color: Stone = self[x, y]
-        stack: list[tuple[int, int]] = [(x, y)]
+        stack: List[Tuple[int, int]] = [(x, y)]
         visited: np.ndarray = np.zeros(shape=(self.n, self.n), dtype=bool)
         while len(stack) > 0:
             x, y = stack.pop()
@@ -149,37 +150,72 @@ class Board:
             yield x, y
             visited[x, y] = True
             for nx, ny in self._get_adjacency(x, y):
-                if self[nx, ny] == color:
+                if self.data[nx, ny] == color:
                     stack.append((nx, ny))
 
     def _get_adjacencies(
-        self, connected: Iterable[tuple[int, int]]
-    ) -> Iterable[tuple[int, int]]:
+        self, connected: Iterable[Tuple[int, int]]
+    ) -> Iterable[Tuple[int, int]]:
         for x, y in connected:
             for nx, ny in self._get_adjacency(x, y):
                 yield nx, ny
+
+    def _get_liberty(self, x: int, y: int) -> bool:
+        color: Stone = self[x, y]
+        assert color != Stone.EMPTY
+        stack: List[Tuple[int, int]] = [(x, y)]
+        visited: np.ndarray = np.zeros(shape=(self.n, self.n), dtype=bool)
+        while len(stack) > 0:
+            x, y = stack.pop()
+            if visited[x, y]:
+                continue
+            visited[x, y] = True
+            for nx, ny in self._get_adjacency(x, y):
+                if self[nx, ny] == color:
+                    stack.append((nx, ny))
+                elif self[nx, ny] == Stone.EMPTY:
+                    return True
+        return False
+
+    def _get_connected_liberty(
+        self, x: int, y: int
+    ) -> Tuple[List[Tuple[int, int]], bool]:
+        color: Stone = self[x, y]
+        assert color != Stone.EMPTY
+        stack: List[Tuple[int, int]] = [(x, y)]
+        connected: List[Tuple[int, int]] = []
+        liberty: bool = False
+        visited: np.ndarray = np.zeros(shape=(self.n, self.n), dtype=bool)
+        while len(stack) > 0:
+            x, y = stack.pop()
+            if visited[x, y]:
+                continue
+            connected.append((x, y))
+            visited[x, y] = True
+            for nx, ny in self._get_adjacency(x, y):
+                if self[nx, ny] == color:
+                    stack.append((nx, ny))
+                elif self[nx, ny] == Stone.EMPTY:
+                    liberty = True
+        return connected, liberty
 
     def _get_liberties(self) -> np.ndarray:
         ret: np.ndarray = np.zeros(shape=(self.n, self.n), dtype=bool)
         visited: np.ndarray = np.zeros(shape=(self.n, self.n), dtype=bool)
         for x, y in np.ndindex(self.n, self.n):
-            match self.data[x, y]:
-                case Stone.EMPTY:
-                    ret[x, y] = True
-                case color:
-                    if visited[x, y]:
-                        continue
-                    connected: list[tuple[int, int]] = list(self._get_connected(x, y))
-                    for nnx, nny in self._get_adjacencies(connected):
-                        match self.data[nnx, nny]:
-                            case Stone.EMPTY:
-                                for nx, ny in connected:
-                                    ret[nx, ny] = True
-                                break
-                            case _:
-                                pass
-                    for nx, ny in connected:
-                        visited[nx, ny] = True
+            if self.data[x, y] == Stone.EMPTY:
+                ret[x, y] = True
+            else:
+                if visited[x, y]:
+                    continue
+                connected: List[Tuple[int, int]] = list(self._get_connected(x, y))
+                for nnx, nny in self._get_adjacencies(connected):
+                    if self.data[nnx, nny] == Stone.EMPTY:
+                        for nx, ny in connected:
+                            ret[nx, ny] = True
+                        break
+                for nx, ny in connected:
+                    visited[nx, ny] = True
         return ret
 
     @property
@@ -193,13 +229,18 @@ class Board:
         else:
             self.last_move_is_pass = (self.last_move_is_pass[-1], False)
             self.data[x, y] = color
-            capture: np.ndarray = (self.liberties == False) & (self.data == -color)
-            if capture.sum() == 1:
-                where: tuple[np.ndarray, np.ndarray] = np.where(capture)
-                self.last_capture = where[0][0], where[1][0]
+            capture: List[Tuple[int, int]] = []
+            for nx, ny in self._get_adjacency(x, y):
+                if self.data[nx, ny] == -color:
+                    connected, liberty = self._get_connected_liberty(nx, ny)
+                    if not liberty:
+                        capture.extend(connected)
+            if len(capture) == 1:
+                self.last_capture = capture[0]
             else:
                 self.last_capture = (-1, -1)
-            self.data[capture] = Stone.EMPTY
+            for nnx, nny in capture:
+                self.data[nnx, nny] = Stone.EMPTY
 
     def _validate_move(self, x: int, y: int, color: Stone) -> bool:
         assert color in [Stone.BLACK, Stone.WHITE]
@@ -212,11 +253,11 @@ class Board:
             return False
         board: Board = self.copy()
         board._unsafe_add_stone(x, y, color=color)
-        if not board.liberties.all():
+        if not board._get_liberty(x, y):
             return False
         return True
 
-    def _get_valid_moves(self, color: Stone) -> Iterable[tuple[int, int]]:
+    def _get_valid_moves(self, color: Stone) -> Iterable[Tuple[int, int]]:
         for x, y in np.ndindex(self.n, self.n):
             if self._validate_move(x, y, color=color):
                 yield (x, y)

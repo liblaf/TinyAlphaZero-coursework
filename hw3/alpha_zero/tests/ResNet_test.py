@@ -8,7 +8,7 @@ import torch
 
 from ..GoBoard import Board
 from ..GoGame import GoGame
-from ..GoNNet import GoNNet, GoNNetWrapper, net_config
+from ..ResNet import GoNNet, GoNNetWrapper, get_encoded_state, net_config
 
 
 def test_GoNNet_forward(board_size: int = 9) -> None:
@@ -18,7 +18,7 @@ def test_GoNNet_forward(board_size: int = 9) -> None:
     state: Board = game.reset()
     policy, value = nnet.forward(
         torch.tensor(
-            np.repeat(state.data, repeats=batch_size),
+            np.repeat(get_encoded_state(state.data), repeats=batch_size),
             dtype=torch.float,
         )
     )

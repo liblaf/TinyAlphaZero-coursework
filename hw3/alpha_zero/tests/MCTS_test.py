@@ -1,8 +1,8 @@
 import numpy as np
 
+from .. import GoNNetWrapper
 from ..GoBoard import Board
 from ..GoGame import GoGame
-from ..GoNNet import GoNNetWrapper
 from ..MCTS import MCTS
 
 
