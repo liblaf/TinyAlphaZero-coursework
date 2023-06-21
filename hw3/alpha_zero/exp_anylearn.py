@@ -5,7 +5,7 @@ from anylearn.applications.quickstart import quick_train
 from anylearn.config import init_sdk
 
 logging.basicConfig(level=logging.INFO)
-
+from . import NAME
 
 parser: argparse.ArgumentParser = argparse.ArgumentParser()
 parser.add_argument("-u", "--username", dest="username")
@@ -23,7 +23,7 @@ if __name__ == "__main__":
         disable_git=args.disable_git,
     )
     train_task, _, _, _ = quick_train(
-        algorithm_cloud_name="AlphaZero-ResNet",
+        algorithm_cloud_name=f"AlphaZero-{NAME}",
         algorithm_entrypoint=f'make train PYTHON_FLAGS="-OO" MULTIPROCESSING={args.multiprocessing}',  # 训练启动命令，可以是python、shell等等
         algorithm_force_update=True,
         algorithm_local_dir="./",
@@ -36,7 +36,8 @@ if __name__ == "__main__":
             "name": "SE2023",  # type: ignore
             "RTX-3090-shared": 1,
         },
-        task_name="ResNet-"
+        task_name=NAME
+        + "-"
         + ("Multiprocessing" if args.multiprocessing else "Sequential"),
     )
     print(train_task)

@@ -6,16 +6,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Deque, Dict, Iterable, List, Tuple, Union
 
+import anylearn
 import numpy as np
 import torch.multiprocessing as mp
 
-from . import GoNNetWrapper
+from . import PROCESSES, GoNNetWrapper
 from .GoBoard import Board
 from .GoGame import GoGame
 from .MCTS import MCTS
 from .pit import multi_match as multi_match_sequential
 from .pit_multiprocessing import multi_match as multi_match_multiprocessing
 from .Player import FastEvalPlayer, Player
+from .plot import plot_loss, plot_model_update_frequency, plot_win_rate
 
 log = logging.getLogger(__name__)
 
@@ -152,12 +154,11 @@ class Trainer:
         pit_with: Player = self.config["pit_with"]
         multiprocessing: bool = self.config["multiprocessing"]
         pit_results: List[Tuple[float, int, int, int]] = []
-        loss_history: List[List[Tuple[float, float]]] = []
+        loss_history: List[Tuple[float, float]] = []
 
         os.makedirs(name=checkpoint_folder, exist_ok=True)
-        (Path(checkpoint_folder) / "start-time.txt").write_text(
-            datetime.now().isoformat()
-        )
+        start_time: datetime = datetime.now()
+        (Path(checkpoint_folder) / "start-time.txt").write_text(start_time.isoformat())
 
         for i in range(1, max_training_iter + 1):
             log.info(f"Starting Iter #{i} ...")
@@ -170,7 +171,7 @@ class Trainer:
                     mp.set_start_method("spawn")
                 except RuntimeError:
                     pass
-                with mp.Pool(processes=8) as pool:
+                with mp.Pool(processes=PROCESSES) as pool:
                     for game_data in pool.starmap(
                         func=static_collect_single_game,
                         iterable=[
@@ -216,8 +217,8 @@ class Trainer:
                 folder=checkpoint_folder, filename="temp.pth.tar"
             )
 
-            loss_history.append(self.next_net.train(train_examples))
-            log.info("Loss: %s", loss_history[-1][-1][1])
+            loss_history += self.next_net.train(train_examples)
+            log.info("Loss: %s", loss_history[-1][1])
 
             next_mcts = MCTS(self.game, self.next_net, num_sims, cpuct)
             last_mcts = MCTS(self.game, self.last_net, num_sims, cpuct)
@@ -257,13 +258,33 @@ class Trainer:
             log.info(f"PIT with {pit_with} Win: {win}, Lose: {lose}, Draw: {draw}")
             pit_results.append((datetime.now().timestamp(), win, lose, draw))
             np.savetxt(
-                fname=Path(checkpoint_folder) / "pit_results.csv",
+                fname=Path(checkpoint_folder) / "pit-results.csv",
                 X=pit_results,
                 delimiter=",",
             )
+            plot_win_rate(
+                start_time=start_time,
+                pit_results=pit_results,
+                output=Path(checkpoint_folder) / "win-rate.png",
+            )
+            plot_model_update_frequency(
+                start_time=start_time,
+                pit_results=pit_results,
+                output=Path(checkpoint_folder) / "model-update-frequency.png",
+            )
+
+            try:
+                anylearn.report_intermediate_metric(win / (win + lose + draw))
+            except:
+                pass
 
             np.savetxt(
-                fname=Path(checkpoint_folder) / "loss_history.csv",
+                fname=Path(checkpoint_folder) / "loss-history.csv",
                 X=loss_history,
                 delimiter=",",
+            )
+            plot_loss(
+                start_time=start_time,
+                loss_history=loss_history,
+                output=Path(checkpoint_folder) / "loss.png",
             )

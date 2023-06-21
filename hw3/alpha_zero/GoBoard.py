@@ -25,8 +25,8 @@ class Board:
 
     def __str__(self) -> str:
         ret: str = ""
-        ret += f"Last Capture: {self.last_capture}" + "\n"
-        ret += f"Num  Moves  : {self.num_moves}" + "\n"
+        # ret += f"Last Capture: {self.last_capture}" + "\n"
+        # ret += f"Num  Moves  : {self.num_moves}" + "\n"
         for i in range(self.n):
             for j in range(self.n):
                 if self.data[i, j] == Stone.EMPTY:

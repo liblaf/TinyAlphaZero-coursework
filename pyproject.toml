@@ -18,9 +18,9 @@ numpy = "^1.21.1"
 python = "^3.7"
 
 [tool.poetry.group.dev.dependencies]
+py-spy = "^0.3.14"
 pytest = "^7.3.2"
 pytest-cov = "^4.1.0"
-py-spy = "^0.3.14"
 
 [tool.poetry.group.pytorch.dependencies]
 torch = { source = "pytorch", version = "1.12.1+cpu" }

@@ -9,15 +9,15 @@ MULTIPROCESSING ?= True
 
 all:
 
-anylearn: $(CODE)/exp_anylearn.py $(CURDIR)/requirements.txt
+anylearn: $(CURDIR)/requirements.txt
 ifeq ($(BW_SESSION),)
 	$(error Bitwarden Locked)
 else
 	$(MAKE) clean
 ifeq ($(MULTIPROCESSING), True)
-	$(PYTHON) $< --username "$(shell bw get username Anylearn)" --password "$(shell bw get password Anylearn)" --multiprocessing
+	$(PYTHON) -m alpha_zero.exp_anylearn --username "$(shell bw get username Anylearn)" --password "$(shell bw get password Anylearn)" --multiprocessing
 else
-	$(PYTHON) $< --username "$(shell bw get username Anylearn)" --password "$(shell bw get password Anylearn)"
+	$(PYTHON) -m alpha_zero.exp_anylearn --username "$(shell bw get username Anylearn)" --password "$(shell bw get password Anylearn)"
 endif
 	$(MAKE) clean
 endif

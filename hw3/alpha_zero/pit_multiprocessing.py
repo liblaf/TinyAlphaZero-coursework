@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 import torch.multiprocessing as mp
 
+from . import PROCESSES
 from .GoGame import GoGame
 from .Player import AlphaZeroPlayer, Player, RandomPlayer
 
@@ -68,7 +69,7 @@ def multi_match(
     #     player2_win += score[0]
     #     draw += score[1]
 
-    with mp.Pool(processes=8) as pool:
+    with mp.Pool(processes=PROCESSES) as pool:
         for player_1_win_once, draw_once, player_2_win_once in pool.starmap(
             single_match, [(player1, player2, game)] * (n_test // 2)
         ):
