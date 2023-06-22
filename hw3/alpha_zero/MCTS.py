@@ -121,7 +121,7 @@ class MCTS:
         # compute the next board after executing the best action here
         next_board: Board = self.game.next_state(board=board, player=1, action=action)
 
-        v = self.search(next_board)
+        value = self.search(next_board)
 
         # TODO update Q_state_action, N_state_action, and N_state
         ##############################
@@ -139,7 +139,7 @@ class MCTS:
             self.mean_action_value[(state, action)] = value
         self.visit_count_state[state] = self.visit_count_state.get(state, 0) + 1
 
-        return -v
+        return -value
 
     def save_params(self, file_name: Union[str, Path] = "mcts_param.pkl") -> None:
         with open(file_name, "wb") as f:
