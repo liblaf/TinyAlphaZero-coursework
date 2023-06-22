@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 import numpy as np
 
 from ..GoBoard import Board, Stone
@@ -106,3 +108,14 @@ def test_terminal_not_over() -> None:
     board: Board = game.reset()
     assert game.is_terminal(board=board, player=1) == 0
     assert game.is_terminal(board=board, player=-1) == 0
+
+
+def test_get_transform_data() -> None:
+    game: GoGame = GoGame(n=5)
+    board: Board = game.reset()
+    policy: np.ndarray = np.zeros(shape=(game.action_size()))
+    data: List[Tuple[Board, np.ndarray]] = game.get_transform_data(
+        board=board, policy=policy
+    )
+    assert len(data) == 8
+    assert all([len(p) == game.action_size() for _, p in data])

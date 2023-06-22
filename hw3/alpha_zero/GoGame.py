@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Iterable, List, Tuple
 
 import numpy as np
 
@@ -92,10 +92,11 @@ class GoGame:
         ######################################
         #        YOUR CODE GOES HERE         #
         ######################################
+        return list(self._get_transform_data(board=board, policy=policy))
 
         # you can simply return [(board, policy)]
         # if you don't want to use this method
-        return [(board, policy)]
+        # return [(board, policy)]
 
     @staticmethod
     def is_terminal(board: Board, player: int) -> float:
@@ -143,3 +144,27 @@ class GoGame:
         Print the board to console.
         """
         print(str(board))
+
+    def _get_transform_data(
+        self, board: Board, policy: np.ndarray
+    ) -> Iterable[Tuple[Board, np.ndarray]]:
+        policy_matrix: np.ndarray = np.resize(policy, new_shape=(self.n, self.n))
+        policy_pass: float = policy[-1]
+        next_board: np.ndarray = board.data.copy()
+        next_policy: np.ndarray = policy_matrix.copy()
+
+        def get_board(matrix: np.ndarray) -> Board:
+            new_board: Board = board.copy()
+            new_board.load_from_numpy(matrix)
+            return new_board
+
+        def get_policy(matrix: np.ndarray) -> np.ndarray:
+            return np.append(matrix.flatten(), policy_pass)
+
+        for _ in range(4):
+            yield get_board(next_board), get_policy(next_policy)
+            yield get_board(np.fliplr(next_board)), get_policy(np.fliplr(next_policy))
+            next_board = np.rot90(next_board)
+            next_policy = np.rot90(next_policy)
+        np.testing.assert_array_almost_equal(next_board, board.data)
+        np.testing.assert_array_almost_equal(next_policy, policy_matrix)
