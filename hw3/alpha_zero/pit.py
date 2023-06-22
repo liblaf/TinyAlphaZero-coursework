@@ -2,11 +2,11 @@ from typing import List, Tuple
 
 from tqdm import trange
 
+from . import BOARD_SIZE
 from .GoGame import GoGame
 from .Player import AlphaZeroPlayer, Player, RandomPlayer
 
 N_TEST: int = 80
-BOARD_SIZE: int = 9
 N_PLAY_OUT: int = 50
 
 

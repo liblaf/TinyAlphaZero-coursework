@@ -10,10 +10,11 @@ import torch.nn.functional as F
 import torch.optim as optim
 from tqdm import tqdm
 
+from . import BATCH_SIZE
 from .GoGame import GoGame
 
 net_config: Dict[str, Any] = {
-    "batch_size": 64,
+    "batch_size": BATCH_SIZE,
     "cuda": torch.cuda.is_available(),
     "dropout": 0.3,
     "epochs": 10,
@@ -178,11 +179,13 @@ class GoNNetWrapper:
                 policy: torch.Tensor
                 value: torch.Tensor
                 policy, value = self.nnet(boards)
+                assert value.shape == target_vs.shape
+                assert policy.shape == target_pis.shape
                 loss = F.mse_loss(input=value, target=target_vs, reduction="none").view(
                     batch_size
                 ) - torch.sum(policy * target_pis, dim=-1)
                 optimizer.zero_grad()
-                loss = loss.sum()
+                loss = loss.sum() / batch_size
                 loss_list.append((datetime.now().timestamp(), loss.item()))
                 loss.backward()
                 optimizer.step()

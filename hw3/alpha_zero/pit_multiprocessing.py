@@ -2,12 +2,11 @@ from typing import List, Tuple
 
 import torch.multiprocessing as mp
 
-from . import PROCESSES
+from . import BOARD_SIZE, PROCESSES
 from .GoGame import GoGame
 from .Player import AlphaZeroPlayer, Player, RandomPlayer
 
 N_TEST: int = 80
-BOARD_SIZE: int = 9
 N_PLAY_OUT: int = 50
 
 

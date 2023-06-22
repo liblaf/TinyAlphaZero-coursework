@@ -4,7 +4,9 @@ from pathlib import Path
 from typing import Any, Dict, Tuple, Union
 
 import coloredlogs
+import numpy as np
 
+from . import BOARD_SIZE, UPDATE_THRESHOLD
 from . import GoNNetWrapper as nn
 from .GoGame import GoGame as Game
 from .Player import RandomPlayer
@@ -13,24 +15,25 @@ from .utils import set_seed_everywhere
 
 parser: argparse.ArgumentParser = argparse.ArgumentParser()
 parser.add_argument(
-    "--multiprocessing", action="store_true", default=False, dest="multiprocessing"
+    "--multiprocessing", action="store_true", default=True, dest="multiprocessing"
+)
+parser.add_argument(
+    "--no-multiprocessing", action="store_false", default=True, dest="multiprocessing"
 )
 
 log = logging.getLogger(__name__)
 
 coloredlogs.install(level="INFO")
 
-BOARD_SIZE: int = 9
-
 args: Dict[str, Any] = {
     "max_training_iter": 5000,  # 训练主循环最大迭代次数
     "selfplay_each_iter": 100,  # 每次训练迭代自我对弈次数
     "max_train_data_packs_len": 20,  # 最多保存最近的多少次训练迭代采集的数据
-    "update_threshold": 0.00,  # 更新模型胜率阈值
+    "update_threshold": UPDATE_THRESHOLD,  # 更新模型胜率阈值
     "update_match_cnt": 30,  # 计算更新模型胜率阈值的对弈次数
     "eval_match_cnt": 10,  # 每次更新模型后，进行评估的对弈次数
     "num_sims": 50,  # MCTS搜索的模拟次数
-    "cpuct": 1,  # MCTS探索系数
+    "cpuct": np.sqrt(2),  # MCTS探索系数
     "cuda": True,  # 启用CUDA
     "checkpoint_folder": "./output",  # 模型保存路径
     "load_model": False,  # 是否加载模型

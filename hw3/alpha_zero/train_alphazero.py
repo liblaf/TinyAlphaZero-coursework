@@ -257,7 +257,27 @@ class Trainer:
                 self_pit_results=self_pit_results,
                 output=Path(checkpoint_folder) / "model-update-frequency.png",
             )
-            if next_win / (next_win + last_win + draw) > update_threshold:
+
+            def pit() -> None:
+                win, lose, draw = multi_match(
+                    player1=next_player, player2=pit_with, game=self.game
+                )
+                log.info(f"PIT with {pit_with} Win: {win}, Lose: {lose}, Draw: {draw}")
+                pit_results.append((datetime.now().timestamp(), win, lose, draw))
+                np.savetxt(
+                    fname=Path(checkpoint_folder) / "pit-results.csv",
+                    X=pit_results,
+                    delimiter=",",
+                )
+                plot_win_rate(
+                    start_time=start_time,
+                    pit_results=pit_results,
+                    output=Path(checkpoint_folder) / "win-rate.png",
+                )
+
+            if (next_win + 0.1 * draw) / (
+                next_win + last_win + 0.2 * draw
+            ) > update_threshold:
                 log.info("Accept new model.")
                 self.next_net.save_checkpoint(
                     folder=checkpoint_folder, filename=f"checkpoint_{i}.pth.tar"
@@ -265,24 +285,12 @@ class Trainer:
                 self.next_net.save_checkpoint(
                     folder=checkpoint_folder, filename="best.pth.tar"
                 )
+                pit()
             else:
                 log.info("Reject new model.")
                 self.next_net.load_checkpoint(
                     folder=checkpoint_folder, filename="temp.pth.tar"
                 )
 
-            win, lose, draw = multi_match(
-                player1=next_player, player2=pit_with, game=self.game
-            )
-            log.info(f"PIT with {pit_with} Win: {win}, Lose: {lose}, Draw: {draw}")
-            pit_results.append((datetime.now().timestamp(), win, lose, draw))
-            np.savetxt(
-                fname=Path(checkpoint_folder) / "pit-results.csv",
-                X=pit_results,
-                delimiter=",",
-            )
-            plot_win_rate(
-                start_time=start_time,
-                pit_results=pit_results,
-                output=Path(checkpoint_folder) / "win-rate.png",
-            )
+            if len(pit_results) == 0:
+                pit()

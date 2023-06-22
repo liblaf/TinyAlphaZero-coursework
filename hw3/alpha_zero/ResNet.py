@@ -10,16 +10,17 @@ import torch.nn.functional as F
 import torch.optim as optim
 from tqdm import tqdm
 
+from . import BATCH_SIZE
 from .GoBoard import Stone
 from .GoGame import GoGame
 
 net_config: Dict[str, Any] = {
-    "batch_size": 64,
+    "batch_size": BATCH_SIZE,
     "cuda": torch.cuda.is_available(),
     "dropout": 0.3,
     "epochs": 10,
     "lr": 0.001,
-    "num_channels": 64,
+    "num_channels": 256,
 }
 
 
@@ -75,7 +76,7 @@ class GoNNet(nn.Module):
         self.args = args
         self.board_x, self.board_y = game.obs_size()
         num_res_blocks: int = 4
-        num_hidden: int = 64
+        num_hidden: int = args["num_channels"]
 
         self.start_block = nn.Sequential(
             nn.Conv2d(3, num_hidden, kernel_size=3, padding=1),
@@ -152,7 +153,7 @@ class GoNNetWrapper:
             print(f"Epoch[{str(epoch + 1)}] ")
             self.nnet.train()
 
-            batch_count: int = len(training_data) // batch_size
+            batch_count: int = (len(training_data) // batch_size) + 1
 
             t: tqdm = tqdm(range(batch_count), desc="Training ResNet")
             for _ in t:
@@ -180,11 +181,13 @@ class GoNNetWrapper:
                 policy: torch.Tensor
                 value: torch.Tensor
                 policy, value = self.nnet(boards)
+                assert value.shape == target_vs.shape
+                assert policy.shape == target_pis.shape
                 loss = F.mse_loss(
                     input=value, target=target_vs, reduction="sum"
                 ) + F.cross_entropy(input=policy, target=target_pis, reduction="sum")
                 optimizer.zero_grad()
-                loss = loss.sum()
+                loss = loss.sum() / batch_size
                 loss_list.append((datetime.now().timestamp(), loss.item()))
                 loss.backward()
                 optimizer.step()

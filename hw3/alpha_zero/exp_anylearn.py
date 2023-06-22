@@ -11,7 +11,12 @@ parser: argparse.ArgumentParser = argparse.ArgumentParser()
 parser.add_argument("-u", "--username", dest="username")
 parser.add_argument("-p", "--password", dest="password")
 parser.add_argument("--disable-git", action="store_true", dest="disable_git")
-parser.add_argument("--multiprocessing", action="store_true", dest="multiprocessing")
+parser.add_argument(
+    "--multiprocessing", action="store_true", default=True, dest="multiprocessing"
+)
+parser.add_argument(
+    "--no-multiprocessing", action="store_false", default=True, dest="multiprocessing"
+)
 
 
 if __name__ == "__main__":

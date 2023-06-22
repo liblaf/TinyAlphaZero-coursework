@@ -7,7 +7,7 @@ from .. import GoNNetWrapper
 from ..GoBoard import Board
 from ..GoGame import GoGame
 from ..main import args
-from ..train_alphazero import Trainer
+from ..train_alphazero import Trainer, static_collect_single_game
 
 
 def test_train_alphazero_collect_single_game(board_size: int = 9) -> None:
@@ -21,10 +21,15 @@ def test_train_alphazero_collect_single_game(board_size: int = 9) -> None:
     assert -1 <= value <= 1
 
 
-def test_train_alphazero_collect_single_game_parallel(board_size: int = 9) -> None:
+def test_train_alphazero_static_collect_single_game(board_size: int = 9) -> None:
     game: GoGame = GoGame(n=board_size)
     trainer: Trainer = Trainer(game=game, nnet=GoNNetWrapper(game=game), config=args)
-    data_pack: List[Tuple[Board, np.ndarray, float]] = trainer.collect_single_game()
+    data_pack: List[Tuple[Board, np.ndarray, float]] = static_collect_single_game(
+        board_size=board_size,
+        nnet=trainer.next_net,
+        num_sims=trainer.config["num_sims"],
+        cpuct=trainer.config["cpuct"],
+    )
     board, policy, value = data_pack[0]
     assert board.data.shape == (board_size, board_size)
     assert policy.shape == (game.action_size(),)

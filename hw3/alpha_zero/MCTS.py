@@ -58,11 +58,13 @@ class MCTS:
                 for a in range(self.game.action_size())
             ]
         )
+        valid_moves: np.ndarray = self.game.get_valid_moves(board, player)
+        counts *= valid_moves
         sum_count: int = counts.sum()
         if sum_count:
             probs: np.ndarray = counts / sum_count
         else:
-            probs: np.ndarray = np.ones(len(counts), dtype=float) / len(counts)
+            probs: np.ndarray = valid_moves / valid_moves.sum()
         return probs
 
     def search(self, board: Board) -> float:
