@@ -3,7 +3,9 @@ CODE    := $(CURDIR)/alpha_zero
 OUTPUT  := $(CURDIR)/output
 
 PYTHON_FLAGS ?= # -OO
+PYTEST_FLAGS ?= --capture no
 PYTHON       := python $(PYTHON_FLAGS)
+PYTEST       := pytest $(PYTEST_FLAGS)
 
 MULTIPROCESSING ?= True
 
@@ -38,7 +40,7 @@ profile: $(CURDIR)/train.profile
 	speedscope $<
 
 test:
-	pytest --capture no --cov $(CODE) --cov-report term --cov-report term-missing $(CURDIR) -k plot
+	$(PYTEST) --cov $(CODE) --cov-report term --cov-report term-missing $(CURDIR)
 
 train:
 ifeq ($(MULTIPROCESSING), True)

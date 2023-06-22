@@ -101,25 +101,19 @@ class MCTS:
         for action in range(self.game.action_size()):
             if not valid_moves[action]:
                 continue
-            if (state, action) in self.mean_action_value:
-                upper_confidence_bound: float = self.mean_action_value[
-                    (state, action)
-                ] + self.C * self.prior_probability[state][action] * np.sqrt(
-                    self.visit_count_state.get(state, 0)
-                    / (1 + self.visit_count_state_action[(state, action)])
-                )
-            else:
-                upper_confidence_bound: float = (
-                    self.C
-                    * self.prior_probability[state][action]
-                    * np.sqrt(self.visit_count_state.get(state, 0))
-                )
+            upper_confidence_bound: float = self.mean_action_value.get(
+                (state, action), 0
+            ) + self.C * self.prior_probability[state][action] * np.sqrt(
+                self.visit_count_state.get(state, 0)
+                / (1 + self.visit_count_state_action.get((state, action), 0))
+            )
             if upper_confidence_bound > current_best:
                 best_action = action
                 current_best = upper_confidence_bound
         action: int = best_action
         # compute the next board after executing the best action here
         next_board: Board = self.game.next_state(board=board, player=1, action=action)
+        next_board: Board = self.game.get_board(next_board, player=-1)
 
         value = self.search(next_board)
 
