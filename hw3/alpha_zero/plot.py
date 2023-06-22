@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List, Tuple, Union
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def plot_win_rate(
@@ -17,9 +18,9 @@ def plot_win_rate(
         time_list.append(delta.total_seconds())
         win_rate_list.append(win / (win + lose + draw))
     plt.figure(dpi=300)
-    plt.plot(time_list, win_rate_list)
-    plt.xlabel("Time (s)")
-    plt.ylabel("Win Rate")
+    plt.plot(np.array(time_list) / 3600.0, np.array(win_rate_list) * 100.0)
+    plt.xlabel("Time (hour)")
+    plt.ylabel("Win Rate (%)")
     plt.title("Win Rate Against Random")
     plt.tight_layout()
     plt.savefig(output)
@@ -30,7 +31,25 @@ def plot_model_update_frequency(
     pit_results: List[Tuple[float, int, int, int]],
     output: Union[str, Path] = Path("output") / "model-update-frequency.png",
 ) -> None:
-    pass
+    update_threshold: float = 0.51
+    time_list: List[float] = []
+    update_frequency: List[float] = []
+    last_update_time: datetime = start_time
+    for time, win, lose, draw in pit_results:
+        if win / (win + lose + draw) <= update_threshold:
+            continue
+        current_time: datetime = datetime.fromtimestamp(time)
+        delta: timedelta = current_time - start_time
+        time_list.append(delta.total_seconds())
+        update_frequency.append(1.0 / (current_time - last_update_time).total_seconds())
+        last_update_time = current_time
+    plt.figure(dpi=300)
+    plt.plot(np.array(time_list) / 3600.0, np.array(update_frequency) * 3600.0)
+    plt.xlabel("Time (hour)")
+    plt.ylabel("Update Frequency (per hour)")
+    plt.title("Update Frequency")
+    plt.tight_layout()
+    plt.savefig(output)
 
 
 def plot_loss(
@@ -45,8 +64,8 @@ def plot_loss(
         time_list.append(delta.total_seconds())
         loss_list.append(loss)
     plt.figure(dpi=300)
-    plt.plot(time_list, loss_list)
-    plt.xlabel("Time (s)")
+    plt.plot(np.array(time_list) / 3600.0, loss_list)
+    plt.xlabel("Time (hour)")
     plt.ylabel("Loss")
     plt.title("Loss")
     plt.tight_layout()

@@ -219,6 +219,16 @@ class Trainer:
 
             loss_history += self.next_net.train(train_examples)
             log.info("Loss: %s", loss_history[-1][1])
+            np.savetxt(
+                fname=Path(checkpoint_folder) / "loss-history.csv",
+                X=loss_history,
+                delimiter=",",
+            )
+            plot_loss(
+                start_time=start_time,
+                loss_history=loss_history,
+                output=Path(checkpoint_folder) / "loss.png",
+            )
 
             next_mcts = MCTS(self.game, self.next_net, num_sims, cpuct)
             last_mcts = MCTS(self.game, self.last_net, num_sims, cpuct)
@@ -271,20 +281,4 @@ class Trainer:
                 start_time=start_time,
                 pit_results=pit_results,
                 output=Path(checkpoint_folder) / "model-update-frequency.png",
-            )
-
-            try:
-                anylearn.report_intermediate_metric(win / (win + lose + draw))
-            except:
-                pass
-
-            np.savetxt(
-                fname=Path(checkpoint_folder) / "loss-history.csv",
-                X=loss_history,
-                delimiter=",",
-            )
-            plot_loss(
-                start_time=start_time,
-                loss_history=loss_history,
-                output=Path(checkpoint_folder) / "loss.png",
             )
