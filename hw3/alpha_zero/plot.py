@@ -24,6 +24,7 @@ def plot_win_rate(
     plt.title("Win Rate Against Random")
     plt.tight_layout()
     plt.savefig(output)
+    plt.close()
 
 
 def plot_model_update_frequency(
@@ -50,6 +51,7 @@ def plot_model_update_frequency(
     plt.title("Update Frequency")
     plt.tight_layout()
     plt.savefig(output)
+    plt.close()
 
 
 def plot_loss(
@@ -70,3 +72,4 @@ def plot_loss(
     plt.title("Loss")
     plt.tight_layout()
     plt.savefig(output)
+    plt.close()

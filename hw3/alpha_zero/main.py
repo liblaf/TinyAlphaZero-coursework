@@ -26,7 +26,7 @@ args: Dict[str, Any] = {
     "max_training_iter": 5000,  # 训练主循环最大迭代次数
     "selfplay_each_iter": 100,  # 每次训练迭代自我对弈次数
     "max_train_data_packs_len": 20,  # 最多保存最近的多少次训练迭代采集的数据
-    "update_threshold": 0.51,  # 更新模型胜率阈值
+    "update_threshold": 0.00,  # 更新模型胜率阈值
     "update_match_cnt": 30,  # 计算更新模型胜率阈值的对弈次数
     "eval_match_cnt": 10,  # 每次更新模型后，进行评估的对弈次数
     "num_sims": 50,  # MCTS搜索的模拟次数

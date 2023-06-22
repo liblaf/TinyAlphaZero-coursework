@@ -23,9 +23,14 @@ pytest = "^7.3.2"
 pytest-cov = "^4.1.0"
 
 [tool.poetry.group.pytorch.dependencies]
-torch = { source = "pytorch", version = "1.12.1+cpu" }
+torch = "^1.13.1"
 
 [[tool.poetry.source]]
-name = "pytorch"
+name = "cpu"
 priority = "explicit"
 url = "https://download.pytorch.org/whl/cpu"
+
+[[tool.poetry.source]]
+name = "cu117"
+priority = "explicit"
+url = "https://download.pytorch.org/whl/cu117"
