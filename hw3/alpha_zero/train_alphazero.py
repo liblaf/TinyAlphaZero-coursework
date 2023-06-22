@@ -258,11 +258,7 @@ class Trainer:
                 output=Path(checkpoint_folder) / "model-update-frequency.png",
             )
 
-            def pit() -> None:
-                win, lose, draw = multi_match(
-                    player1=next_player, player2=pit_with, game=self.game
-                )
-                log.info(f"PIT with {pit_with} Win: {win}, Lose: {lose}, Draw: {draw}")
+            def save_pit(win: int, lose: int, draw: int) -> None:
                 pit_results.append((datetime.now().timestamp(), win, lose, draw))
                 np.savetxt(
                     fname=Path(checkpoint_folder) / "pit-results.csv",
@@ -274,6 +270,13 @@ class Trainer:
                     pit_results=pit_results,
                     output=Path(checkpoint_folder) / "win-rate.png",
                 )
+
+            def pit() -> None:
+                win, lose, draw = multi_match(
+                    player1=next_player, player2=pit_with, game=self.game
+                )
+                log.info(f"PIT with {pit_with} Win: {win}, Lose: {lose}, Draw: {draw}")
+                save_pit(win, lose, draw)
 
             if (next_win + 0.1 * draw) / (
                 next_win + last_win + 0.2 * draw
@@ -291,6 +294,8 @@ class Trainer:
                 self.next_net.load_checkpoint(
                     folder=checkpoint_folder, filename="temp.pth.tar"
                 )
-
-            if len(pit_results) == 0:
-                pit()
+                if len(pit_results) == 0:
+                    pit()
+                else:
+                    _, win, lose, draw = pit_results[-1]
+                    save_pit(win, lose, draw)

@@ -38,8 +38,8 @@ clean:
 	@ find $(CURDIR) -type f -name ".coverage"     | xargs --no-run-if-empty -- $(RM) --verbose
 	@ find $(CURDIR) -type f -name "*.zip"         | xargs --no-run-if-empty -- $(RM) --verbose
 	$(RM) --recursive $(CURDIR)/.git
-	$(RM) --recursive $(OUTPUT)
-	# $(RM) --recursive $(RUN)
+	# $(RM) --recursive $(OUTPUT)
+	$(RM) --recursive $(RUN)
 
 pretty: black prettier
 
@@ -49,7 +49,6 @@ profile: $(CURDIR)/train.profile
 TASK_ID        := $(shell date --iso-8601=seconds | tr ':' '-')
 TASK_WORKSPACE := $(RUN)/$(TASK_ID)
 submit: | $(RUN)
-	$(RM) --recursive $(OUTPUT)
 	mkdir --parents --verbose $(TASK_WORKSPACE)
 	install -D --no-target-directory --verbose $(CURDIR)/Makefile $(TASK_WORKSPACE)/Makefile
 	cp --recursive $(CODE) $(TASK_WORKSPACE)
@@ -57,7 +56,7 @@ submit: | $(RUN)
 	tmux pipe-pane -o -t $(TASK_ID) 'cat > $(TASK_WORKSPACE)/train.log'
 
 test:
-	$(PYTEST) --cov=$(CODE) --cov-report=term --cov-report=term-missing $(CODE)
+	$(PYTEST) --cov $(CODE) --cov-report term --cov-report term-missing $(CODE)
 
 train:
 ifeq ($(MULTIPROCESSING), True)
