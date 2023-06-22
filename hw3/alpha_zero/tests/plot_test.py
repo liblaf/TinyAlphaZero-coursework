@@ -31,9 +31,9 @@ def test_plot_win_rate() -> None:
 
 def test_plot_model_update_frequency() -> None:
     start_time: datetime = datetime.now()
-    pit_results: List[Tuple[float, int, int, int]] = []
+    self_pit_results: List[Tuple[float, int, int, int]] = []
     for i in range(100):
-        pit_results.append(
+        self_pit_results.append(
             (
                 datetime.now().timestamp(),
                 random.randint(a=0, b=100),
@@ -45,7 +45,7 @@ def test_plot_model_update_frequency() -> None:
     try:
         output: Path = output_dir / "model-update-frequency.png"
         plot_model_update_frequency(
-            start_time=start_time, pit_results=pit_results, output=output
+            start_time=start_time, self_pit_results=self_pit_results, output=output
         )
         assert output.exists()
     finally:

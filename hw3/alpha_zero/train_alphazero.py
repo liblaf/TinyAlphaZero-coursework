@@ -153,8 +153,9 @@ class Trainer:
         update_threshold: float = self.config["update_threshold"]
         pit_with: Player = self.config["pit_with"]
         multiprocessing: bool = self.config["multiprocessing"]
-        pit_results: List[Tuple[float, int, int, int]] = []
         loss_history: List[Tuple[float, float]] = []
+        self_pit_results: List[Tuple[float, int, int, int]] = []
+        pit_results: List[Tuple[float, int, int, int]] = []
 
         os.makedirs(name=checkpoint_folder, exist_ok=True)
         start_time: datetime = datetime.now()
@@ -248,6 +249,14 @@ class Trainer:
             next_win, last_win, draw = multi_match(
                 player1=next_player, player2=last_player, game=self.game
             )
+            self_pit_results.append(
+                (datetime.now().timestamp(), next_win, last_win, draw)
+            )
+            plot_model_update_frequency(
+                start_time=start_time,
+                self_pit_results=self_pit_results,
+                output=Path(checkpoint_folder) / "model-update-frequency.png",
+            )
             if next_win / (next_win + last_win + draw) > update_threshold:
                 log.info("Accept new model.")
                 self.next_net.save_checkpoint(
@@ -276,9 +285,4 @@ class Trainer:
                 start_time=start_time,
                 pit_results=pit_results,
                 output=Path(checkpoint_folder) / "win-rate.png",
-            )
-            plot_model_update_frequency(
-                start_time=start_time,
-                pit_results=pit_results,
-                output=Path(checkpoint_folder) / "model-update-frequency.png",
             )

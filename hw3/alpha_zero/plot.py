@@ -28,14 +28,14 @@ def plot_win_rate(
 
 def plot_model_update_frequency(
     start_time: datetime,
-    pit_results: List[Tuple[float, int, int, int]],
+    self_pit_results: List[Tuple[float, int, int, int]],
     output: Union[str, Path] = Path("output") / "model-update-frequency.png",
 ) -> None:
     update_threshold: float = 0.51
     time_list: List[float] = []
     update_frequency: List[float] = []
     last_update_time: datetime = start_time
-    for time, win, lose, draw in pit_results:
+    for time, win, lose, draw in self_pit_results:
         if win / (win + lose + draw) <= update_threshold:
             continue
         current_time: datetime = datetime.fromtimestamp(time)
