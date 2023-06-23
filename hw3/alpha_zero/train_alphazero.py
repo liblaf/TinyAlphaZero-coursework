@@ -22,8 +22,8 @@ from .plot import plot_loss, plot_model_update_frequency, plot_win_rate
 log = logging.getLogger(__name__)
 
 
-def static_collect_single_game(
-    board_size: int,
+def collect_single_game_fork(
+    game: GoGame,
     nnet: GoNNetWrapper,
     num_sims: int,
     cpuct: float,
@@ -34,7 +34,6 @@ def static_collect_single_game(
     @return game_history: A list of (board, pi, z)
     """
     # create a New MCTS
-    game: GoGame = GoGame(n=board_size)
     mcts = MCTS(game=game, nnet=nnet, num_sims=num_sims, C=cpuct)
     mcts.train()
 
@@ -65,6 +64,19 @@ def static_collect_single_game(
                 (x[0], x[2], game_result * ((-1) ** (x[1] != current_player)))
                 for x in game_history
             ]
+
+
+def collect_single_game_safe(
+    game: GoGame,
+    nnet: GoNNetWrapper,
+    num_sims: int,
+    cpuct: float,
+) -> List[Tuple[Board, np.ndarray, float]]:
+    try:
+        return collect_single_game_fork(game, nnet, num_sims, cpuct)
+    except:
+        log.error("Error in collect_single_game_fork()", exc_info=True)
+        return []
 
 
 class Trainer:
@@ -144,15 +156,17 @@ class Trainer:
                 Otherwise, reject the new model and keep the old model
 
         """
-        max_training_iter: int = self.config["max_training_iter"]
-        max_train_data_packs_len: int = self.config["max_train_data_packs_len"]
-        selfplay_each_iter: int = self.config["selfplay_each_iter"]
         checkpoint_folder: Union[str, Path] = self.config["checkpoint_folder"]
-        num_sims: int = self.config["num_sims"]
         cpuct: float = self.config["cpuct"]
-        update_threshold: float = self.config["update_threshold"]
-        pit_with: Player = self.config["pit_with"]
+        eval_match_cnt: int = self.config["eval_match_cnt"]
+        max_train_data_packs_len: int = self.config["max_train_data_packs_len"]
+        max_training_iter: int = self.config["max_training_iter"]
         multiprocessing: bool = self.config["multiprocessing"]
+        num_sims: int = self.config["num_sims"]
+        pit_with: Player = self.config["pit_with"]
+        selfplay_each_iter: int = self.config["selfplay_each_iter"]
+        update_match_cnt: int = self.config["update_match_cnt"]
+        update_threshold: float = self.config["update_threshold"]
         loss_history: List[Tuple[float, float]] = []
         self_pit_results: List[Tuple[float, int, int, int]] = []
         pit_results: List[Tuple[float, int, int, int]] = []
@@ -167,17 +181,12 @@ class Trainer:
             data_pack: Deque[Tuple[Board, np.ndarray, float]] = deque()
 
             if multiprocessing:
-                self.next_net.nnet.share_memory()
-                try:
-                    mp.set_start_method("spawn")
-                except RuntimeError:
-                    pass
                 with mp.Pool(processes=PROCESSES) as pool:
                     for game_data in pool.starmap(
-                        func=static_collect_single_game,
+                        func=collect_single_game_safe,
                         iterable=[
                             (
-                                self.game.n,
+                                self.game,
                                 self.next_net,
                                 num_sims,
                                 cpuct,
@@ -185,14 +194,18 @@ class Trainer:
                         ]
                         * selfplay_each_iter,
                     ):
+                        if len(game_data) == 0:
+                            continue
                         data_pack += game_data
-                        r = game_data[0][-1]
+                        # r = game_data[0][-1]
                         # log.info(f"Self Play win={r}, len={len(game_data)}")
             else:
                 for i in range(1, selfplay_each_iter + 1):
                     game_data = self.collect_single_game()
+                    if len(game_data) == 0:
+                        continue
                     data_pack += game_data
-                    r = game_data[0][-1]
+                    # r = game_data[0][-1]
                     # log.info(
                     #     f"Self Play {i}/{selfplay_each_iter}: win={r}, len={len(game_data)}"
                     # )
@@ -247,7 +260,10 @@ class Trainer:
                 else multi_match_sequential
             )
             next_win, last_win, draw = multi_match(
-                player1=next_player, player2=last_player, game=self.game
+                player1=next_player,
+                player2=last_player,
+                game=self.game,
+                n_test=update_match_cnt,
             )
             self_pit_results.append(
                 (datetime.now().timestamp(), next_win, last_win, draw)
@@ -273,7 +289,10 @@ class Trainer:
 
             def pit() -> None:
                 win, lose, draw = multi_match(
-                    player1=next_player, player2=pit_with, game=self.game
+                    player1=next_player,
+                    player2=pit_with,
+                    game=self.game,
+                    n_test=eval_match_cnt,
                 )
                 log.info(f"PIT with {pit_with} Win: {win}, Lose: {lose}, Draw: {draw}")
                 save_pit(win, lose, draw)

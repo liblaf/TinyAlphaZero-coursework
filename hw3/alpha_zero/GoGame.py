@@ -1,4 +1,4 @@
-from typing import Iterable, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 
@@ -7,10 +7,12 @@ from .GoBoard import Board
 
 class GoGame:
     n: int
+    cache_valid_moves: Dict[str, np.ndarray] = {}
 
     def __init__(self, n: int = 3):
         assert n % 2 == 1
         self.n = n
+        self.cache_valid_moves = {}
 
     def reset(self) -> Board:
         """
@@ -70,10 +72,14 @@ class GoGame:
         ######################################
         #        YOUR CODE GOES HERE         #
         ######################################
+        state: str = self.get_string(board=self.get_board(board=board, player=player))
+        if state in self.cache_valid_moves:
+            return self.cache_valid_moves[state]
         valid_moves = np.zeros(shape=(self.action_size(),), dtype=bool)
         for i, j in board.valid_moves(color=player):
             valid_moves[i * self.n + j] = True
         valid_moves[-1] = True
+        self.cache_valid_moves[state] = valid_moves
         return valid_moves
 
     def get_transform_data(

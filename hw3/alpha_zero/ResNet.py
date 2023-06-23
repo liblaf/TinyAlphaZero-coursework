@@ -128,6 +128,7 @@ class GoNNetWrapper:
         self.action_size: int = game.action_size()
         self.board_x, self.board_y = game.obs_size()
         self.nnet: GoNNet = GoNNet(game, net_config)
+        self.nnet.share_memory()
 
         if net_config["cuda"]:
             self.nnet.cuda()
@@ -181,8 +182,10 @@ class GoNNetWrapper:
                 policy: torch.Tensor
                 value: torch.Tensor
                 policy, value = self.nnet(boards)
-                assert value.shape == target_vs.shape
+                assert policy.shape == (batch_size, self.action_size)
                 assert policy.shape == target_pis.shape
+                assert value.shape == (batch_size, 1)
+                assert value.shape == target_vs.shape
                 loss = F.mse_loss(
                     input=value, target=target_vs, reduction="sum"
                 ) + F.cross_entropy(input=policy, target=target_pis, reduction="sum")

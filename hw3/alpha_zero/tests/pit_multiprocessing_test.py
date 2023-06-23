@@ -2,12 +2,14 @@ from typing import List
 
 from ..GoGame import GoGame
 from ..pit_multiprocessing import multi_match, single_match
-from ..Player import RandomPlayer
+from ..Player import AlphaZeroPlayer, RandomPlayer
 
 
-def test_single_match(board_size: int = 9) -> None:
+def test_single_match(board_size: int = 5) -> None:
     game: GoGame = GoGame(n=board_size)
-    player_1: RandomPlayer = RandomPlayer(game=game, player=1)
+    player_1: AlphaZeroPlayer = AlphaZeroPlayer(
+        game=game, checkpoint_path="./output/best.pth.tar", num_sims=50, C=1.0
+    )
     player_2: RandomPlayer = RandomPlayer(game=game, player=-1)
     scores: List[int] = single_match(player_1, player_2, game)
     assert len(scores) == 3
@@ -15,9 +17,11 @@ def test_single_match(board_size: int = 9) -> None:
     assert sum(scores) == 1
 
 
-def test_multi_match(board_size: int = 9, n_test: int = 100) -> None:
+def test_multi_match(board_size: int = 5, n_test: int = 100) -> None:
     game: GoGame = GoGame(n=board_size)
-    player_1: RandomPlayer = RandomPlayer(game=game, player=1)
+    player_1: AlphaZeroPlayer = AlphaZeroPlayer(
+        game=game, checkpoint_path="./output/best.pth.tar", num_sims=50, C=1.0
+    )
     player_2: RandomPlayer = RandomPlayer(game=game, player=-1)
     player_1_win, draw, player_2_win = multi_match(
         player_1, player_2, game, n_test=n_test

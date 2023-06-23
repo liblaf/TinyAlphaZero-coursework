@@ -11,7 +11,7 @@ from ..GoGame import GoGame
 from ..GoNNet import GoNNet, GoNNetWrapper, net_config
 
 
-def test_GoNNet_forward(board_size: int = 9) -> None:
+def test_GoNNet_forward(board_size: int = 5) -> None:
     batch_size: int = net_config["batch_size"]
     game: GoGame = GoGame(n=board_size)
     nnet: GoNNet = GoNNet(game=game, args=net_config)
@@ -26,7 +26,7 @@ def test_GoNNet_forward(board_size: int = 9) -> None:
     assert value.shape == (batch_size, 1)
 
 
-def test_GoNNetWrapper_train(board_size: int = 9) -> None:
+def test_GoNNetWrapper_train(board_size: int = 5) -> None:
     batch_size: int = net_config["batch_size"]
     game: GoGame = GoGame(n=board_size)
     net_wrapper: GoNNetWrapper = GoNNetWrapper(game=game)
@@ -40,7 +40,7 @@ def test_GoNNetWrapper_train(board_size: int = 9) -> None:
     assert loss_list[-1][1] < loss_list[0][1]
 
 
-def test_GoNNetWrapper_predict(board_size: int = 9) -> None:
+def test_GoNNetWrapper_predict(board_size: int = 5) -> None:
     game: GoGame = GoGame(n=board_size)
     net_wrapper: GoNNetWrapper = GoNNetWrapper(game=game)
     policy, value = net_wrapper.predict(board=game.reset().data)
@@ -50,7 +50,7 @@ def test_GoNNetWrapper_predict(board_size: int = 9) -> None:
     assert np.all(-1 <= value <= 1)
 
 
-def test_GoNNetWrapper_save_checkpoint(board_size: int = 9) -> None:
+def test_GoNNetWrapper_save_checkpoint(board_size: int = 5) -> None:
     game: GoGame = GoGame(n=board_size)
     net_wrapper: GoNNetWrapper = GoNNetWrapper(game=game)
     folder: Path = Path(tempfile.mkdtemp())

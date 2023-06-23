@@ -29,7 +29,7 @@ if __name__ == "__main__":
     )
     train_task, _, _, _ = quick_train(
         algorithm_cloud_name=f"AlphaZero-{NAME}",
-        algorithm_entrypoint=f'make train PYTHON_FLAGS="-OO" MULTIPROCESSING={args.multiprocessing}',  # 训练启动命令，可以是python、shell等等
+        algorithm_entrypoint=f'make train PYTHON_FLAGS="" MULTIPROCESSING={args.multiprocessing}',  # 训练启动命令，可以是python、shell等等
         algorithm_force_update=True,
         algorithm_local_dir="./",
         algorithm_output="./output",

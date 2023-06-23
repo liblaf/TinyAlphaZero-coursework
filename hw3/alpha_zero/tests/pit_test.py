@@ -5,7 +5,7 @@ from ..pit import multi_match, single_match
 from ..Player import RandomPlayer
 
 
-def test_single_match(board_size: int = 9) -> None:
+def test_single_match(board_size: int = 5) -> None:
     game: GoGame = GoGame(n=board_size)
     player_1: RandomPlayer = RandomPlayer(game=game, player=1)
     player_2: RandomPlayer = RandomPlayer(game=game, player=-1)
@@ -15,7 +15,7 @@ def test_single_match(board_size: int = 9) -> None:
     assert sum(scores) == 1
 
 
-def test_multi_match(board_size: int = 9, n_test: int = 100) -> None:
+def test_multi_match(board_size: int = 5, n_test: int = 100) -> None:
     game: GoGame = GoGame(n=board_size)
     player_1: RandomPlayer = RandomPlayer(game=game, player=1)
     player_2: RandomPlayer = RandomPlayer(game=game, player=-1)

@@ -6,7 +6,7 @@ RUN     := $(CURDIR)/run
 CUDA_VISIBLE_DEVICES ?= 0
 MULTIPROCESSING      ?= True
 PYTEST_FLAGS         ?= --capture no
-PYTHON_FLAGS         ?= -OO
+PYTHON_FLAGS         ?= # -OO
 export CUDA_VISIBLE_DEVICES
 export MULTIPROCESSING
 export PYTEST_FLAGS
@@ -21,13 +21,11 @@ anylearn: $(CURDIR)/requirements.txt
 ifeq ($(BW_SESSION),)
 	$(error Bitwarden Locked)
 else
-	$(MAKE) clean
 ifeq ($(MULTIPROCESSING), True)
 	$(PYTHON) -m alpha_zero.exp_anylearn --username "$(shell bw get username Anylearn)" --password "$(shell bw get password Anylearn)" --multiprocessing
 else
 	$(PYTHON) -m alpha_zero.exp_anylearn --username "$(shell bw get username Anylearn)" --password "$(shell bw get password Anylearn)" --no-multiprocessing
 endif
-	$(MAKE) clean
 endif
 
 archive: $(ARCHIVE)
@@ -39,7 +37,7 @@ clean:
 	@ find $(CURDIR) -type f -name "*.zip"         | xargs --no-run-if-empty -- $(RM) --verbose
 	$(RM) --recursive $(CURDIR)/.git
 	# $(RM) --recursive $(OUTPUT)
-	$(RM) --recursive $(RUN)
+	# $(RM) --recursive $(RUN)
 
 pretty: black prettier
 
@@ -56,7 +54,7 @@ submit: | $(RUN)
 	tmux pipe-pane -o -t $(TASK_ID) 'cat > $(TASK_WORKSPACE)/train.log'
 
 test:
-	$(PYTEST) --cov $(CODE) --cov-report term --cov-report term-missing $(CODE)
+	$(PYTEST) --cov=$(CODE) --cov-report=term --cov-report=term-missing $(CODE)
 
 train:
 ifeq ($(MULTIPROCESSING), True)

@@ -1,3 +1,4 @@
+import logging
 from typing import List, Tuple
 
 import torch.multiprocessing as mp
@@ -8,6 +9,8 @@ from .Player import AlphaZeroPlayer, Player, RandomPlayer
 
 N_TEST: int = 80
 N_PLAY_OUT: int = 50
+
+log = logging.getLogger(__name__)
 
 
 def single_match(
@@ -22,29 +25,41 @@ def single_match(
 
     while True:
         # player 1 move
-        action = player1.play(state)
-        state = game.next_state(state, 1, action)
+        action = player1.play(board=state, player=1)
+        state = game.next_state(board=state, player=1, action=action)
 
         if display:
             game.display(state)
             print("---------------------------------")
 
         # player 2 move
-        if game.is_terminal(state, 1) == 0:  # not end
-            action = player2.play(state)
-            state = game.next_state(state, -1, action)
+        if game.is_terminal(board=state, player=1) == 0:  # not end
+            action = player2.play(board=state, player=-1)
+            state = game.next_state(board=state, player=-1, action=action)
 
         if display:
             game.display(state)
             print("---------------------------------")
 
         # if end game
-        game_end = game.is_terminal(state, -1)  # return -1 for player 1 win
+        game_end = game.is_terminal(
+            board=state, player=-1
+        )  # return -1 for player 1 win
         if game_end != 0:
             score[(int(game_end // 1) + 1)] += 1
             break
 
     return score
+
+
+def single_match_fork(
+    player1: Player, player2: Player, game: GoGame, display: bool = False
+) -> List[int]:
+    try:
+        return single_match(player1.copy(), player2.copy(), game, display)
+    except:
+        log.error("Error in single_match()", exc_info=True)
+        return [0, 0, 0]
 
 
 def multi_match(
@@ -70,14 +85,15 @@ def multi_match(
 
     with mp.Pool(processes=PROCESSES) as pool:
         for player_1_win_once, draw_once, player_2_win_once in pool.starmap(
-            single_match, [(player1, player2, game)] * (n_test // 2)
+            single_match_fork, [(player1, player2, game)] * (n_test // 2)
         ):
             player1_win += player_1_win_once
             player2_win += player_2_win_once
             draw += draw_once
 
+    with mp.Pool(processes=PROCESSES) as pool:
         for player_2_win_once, draw_once, player_1_win_once in pool.starmap(
-            single_match, [(player2, player1, game)] * (n_test // 2)
+            single_match_fork, [(player1, player2, game)] * (n_test // 2)
         ):  # reverse side
             player1_win += player_1_win_once
             player2_win += player_2_win_once

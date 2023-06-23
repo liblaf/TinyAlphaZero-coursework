@@ -1,9 +1,11 @@
+import copy
 import os
 import pickle
 from pathlib import Path
 from typing import Dict, Tuple, Union
 
 import numpy as np
+from typing_extensions import Self
 
 from . import GoNNetWrapper
 from .GoBoard import Board
@@ -38,6 +40,16 @@ class MCTS:
         # self.N_state = {}
         # stores policy
         # self.P_state = {}
+
+    def copy(self) -> Self:
+        new_mcts: MCTS = MCTS(self.game, self.nnet, self.num_sims, self.C)
+        new_mcts.visit_count_state = copy.deepcopy(self.visit_count_state.copy())
+        new_mcts.visit_count_state_action = copy.deepcopy(
+            self.visit_count_state_action.copy()
+        )
+        new_mcts.mean_action_value = copy.deepcopy(self.mean_action_value.copy())
+        new_mcts.prior_probability = copy.deepcopy(self.prior_probability.copy())
+        return new_mcts
 
     def train(self) -> None:
         self.training = True
