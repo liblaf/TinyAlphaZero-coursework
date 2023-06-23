@@ -294,7 +294,6 @@ class Trainer:
                     game=self.game,
                     n_test=eval_match_cnt,
                 )
-                log.info(f"PIT with {pit_with} Win: {win}, Lose: {lose}, Draw: {draw}")
                 save_pit(win, lose, draw)
 
             if (next_win + 0.1 * draw) / (

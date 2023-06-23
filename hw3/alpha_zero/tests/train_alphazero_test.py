@@ -24,7 +24,7 @@ def test_train_alphazero_collect_single_game_fork(board_size: int = 9) -> None:
     game: GoGame = GoGame(n=board_size)
     trainer: Trainer = Trainer(game=game, nnet=GoNNetWrapper(game=game), config=args)
     data_pack: List[Tuple[Board, np.ndarray, float]] = collect_single_game_fork(
-        board_size=board_size,
+        game=game,
         nnet=trainer.next_net,
         num_sims=trainer.config["num_sims"],
         cpuct=trainer.config["cpuct"],
