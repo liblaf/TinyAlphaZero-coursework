@@ -26,6 +26,7 @@ ifeq ($(MULTIPROCESSING), True)
 else
 	$(PYTHON) -m alpha_zero.exp_anylearn --username "$(shell bw get username Anylearn)" --password "$(shell bw get password Anylearn)" --no-multiprocessing
 endif
+	$(RM) --recursive $(CURDIR)/.git
 endif
 
 archive: $(ARCHIVE)

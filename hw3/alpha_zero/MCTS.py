@@ -98,10 +98,13 @@ class MCTS:
         if state not in self.prior_probability:
             probability, value_array = self.nnet.predict(board.data)
             value = value_array[0]
-            probability *= self.game.get_valid_moves(board=board, player=1)
+            valid_moves: np.ndarray = self.game.get_valid_moves(board=board, player=1)
+            probability *= valid_moves
             sum_probability: float = probability.sum()
             if sum_probability > 0:
                 probability = probability / sum_probability
+            else:
+                probability = valid_moves / valid_moves.sum()
             self.prior_probability[state] = probability
             return -value
 
