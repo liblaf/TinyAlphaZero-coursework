@@ -74,7 +74,7 @@ class MCTS:
         else:
             policy, value = self.nnet.predict(board.data)
             counts: np.ndarray = policy
-        valid_moves: np.ndarray = self.game.get_valid_moves(board, player)
+        valid_moves: np.ndarray = self.game.get_valid_moves(board, 1)
         counts *= valid_moves
         sum_count: int = counts.sum()
         if sum_count:
