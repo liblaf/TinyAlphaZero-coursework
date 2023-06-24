@@ -17,7 +17,7 @@ net_config: Dict[str, Any] = {
     "batch_size": BATCH_SIZE,
     "cuda": torch.cuda.is_available(),
     "dropout": 0.3,
-    "epochs": 10,
+    "epochs": 8,
     "lr": 0.001,
     "num_channels": 256,
 }

@@ -259,6 +259,7 @@ class Trainer:
                 if multiprocessing
                 else multi_match_sequential
             )
+            # multi_match = multi_match_sequential
             next_win, last_win, draw = multi_match(
                 player1=next_player,
                 player2=last_player,

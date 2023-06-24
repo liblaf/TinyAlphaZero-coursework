@@ -62,6 +62,18 @@ class MCTS:
         if self.training:
             for i in range(self.num_sims):
                 self.search(board)
+        else:
+            policy, value = self.nnet.predict(
+                self.game.get_board(board, player=player).data
+            )
+            valid_moves: np.ndarray = self.game.get_valid_moves(board, player)
+            policy *= valid_moves
+            policy_sum: float = policy.sum()
+            if policy_sum > 0:
+                policy /= policy_sum
+            else:
+                policy = valid_moves / valid_moves.sum()
+            return policy
 
         s: str = self.game.get_string(board)
         counts: np.ndarray = np.array(

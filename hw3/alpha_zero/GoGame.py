@@ -72,14 +72,14 @@ class GoGame:
         ######################################
         #        YOUR CODE GOES HERE         #
         ######################################
-        state: str = self.get_string(board=self.get_board(board=board, player=player))
-        if state in self.cache_valid_moves:
-            return self.cache_valid_moves[state]
+        # state: str = self.get_string(board=self.get_board(board=board, player=player))
+        # if state in self.cache_valid_moves:
+        #     return self.cache_valid_moves[state]
         valid_moves = np.zeros(shape=(self.action_size(),), dtype=bool)
         for i, j in board.valid_moves(color=player):
             valid_moves[i * self.n + j] = True
         valid_moves[-1] = True
-        self.cache_valid_moves[state] = valid_moves
+        # self.cache_valid_moves[state] = valid_moves
         return valid_moves
 
     def get_transform_data(

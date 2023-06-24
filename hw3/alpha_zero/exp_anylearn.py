@@ -37,7 +37,7 @@ if __name__ == "__main__":
         mirror_name="QUICKSTART_PYTORCH1.12.1_CUDA11",
         quota_group_request={
             "CPU": 8,
-            "Memory": 32,
+            "Memory": 64,
             "name": "SE2023",  # type: ignore
             "RTX-3090-shared": 1,
         },

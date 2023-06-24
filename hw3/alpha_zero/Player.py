@@ -84,7 +84,7 @@ class AlphaZeroPlayer(Player):
         )
         new_player.player = self.player
         new_player.nnet = self.nnet
-        new_player.mcts = self.mcts.copy()
+        new_player.mcts = self.mcts
         return new_player
 
 
@@ -97,12 +97,13 @@ class FastEvalPlayer(Player):
         self.player = 0
 
     def play(self, board: Board, player: Optional[int] = None) -> int:
+        self.mcts.eval()
         action_probs: np.ndarray = self.mcts.get_action_prob(
             board, player=self.player if player is None else player
         )
         return np.random.choice(len(action_probs), p=action_probs)
 
     def copy(self) -> Self:
-        new_player: FastEvalPlayer = FastEvalPlayer(mcts=self.mcts.copy())
+        new_player: FastEvalPlayer = FastEvalPlayer(mcts=self.mcts)
         new_player.player = self.player
         return new_player

@@ -26,9 +26,9 @@ log = logging.getLogger(__name__)
 coloredlogs.install(level="INFO")
 
 args: Dict[str, Any] = {
-    "max_training_iter": 5000,  # 训练主循环最大迭代次数
-    "selfplay_each_iter": 100,  # 每次训练迭代自我对弈次数
-    "max_train_data_packs_len": 20,  # 最多保存最近的多少次训练迭代采集的数据
+    "max_training_iter": 4096,  # 训练主循环最大迭代次数
+    "selfplay_each_iter": 128,  # 每次训练迭代自我对弈次数
+    "max_train_data_packs_len": 32,  # 最多保存最近的多少次训练迭代采集的数据
     "update_threshold": UPDATE_THRESHOLD,  # 更新模型胜率阈值
     "update_match_cnt": UPDATE_MATCH_CNT,  # 计算更新模型胜率阈值的对弈次数
     "eval_match_cnt": EVAL_MATCH_CNT,  # 每次更新模型后，进行评估的对弈次数
