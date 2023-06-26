@@ -19,7 +19,7 @@ python = "^3.7"
 
 [tool.poetry.group.dev.dependencies]
 py-spy = "^0.3.14"
-pytest = "^7.3.2"
+pytest = "^7.4.0"
 pytest-cov = "^4.1.0"
 
 [tool.poetry.group.pytorch.dependencies]
